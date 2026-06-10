@@ -1,6 +1,8 @@
 # NiaOS v2
 
-Production-grade CRM and business management platform built with **Laravel 12**, **Filament 4**, and **PostgreSQL**.
+Standalone SaaS CRM and business management platform built with **Laravel 12**, **Filament 4**, and **PostgreSQL**.
+
+**Akudzwe Digital Partners** is a workspace/tenant inside the NiaOS platform, operating under a free internal workspace. All other clients pay for their own workspaces.
 
 ## Requirements
 
@@ -29,6 +31,9 @@ php artisan migrate
 # Seed roles & permissions
 php artisan db:seed --class=RolesAndPermissionsSeeder
 
+# Bootstrap platform admin (use if login fails after migrations)
+php artisan niaos:ensure-platform-admin
+
 # Storage link (for local file access)
 php artisan storage:link
 
@@ -41,7 +46,7 @@ php artisan serve
 | Module | Resource | Description |
 |--------|----------|-------------|
 | Auth | Filament Auth | Login, password reset, workspace-scoped sessions |
-| Workspaces | `WorkspaceResource` | Multi-tenant orgs with member management |
+| Workspaces | `WorkspaceResource` | Multi-tenant client workspaces with member management |
 | Users & Roles | Spatie Permissions | 8 RBAC roles per workspace, team-based permissions |
 | Customers | `CustomerResource` | Contact management with activities timeline |
 | Leads | `LeadResource` | Pipeline stages: new → contacted → qualified → proposal → won/lost |
@@ -50,6 +55,18 @@ php artisan serve
 | Files | `FileRecordResource` | Cloudflare R2 file attachments |
 | Activity Logs | `ActivityLogResource` | Read-only audit trail for all entities |
 | AI | Jose Assistant | Groq-powered AI assistant (placeholder) |
+
+## SaaS Tenancy
+
+NiaOS is a standalone SaaS platform. Each client operates in their own workspace.
+
+- **Workspace types**: `internal` (free workspace for the platform owner's own business), `paid_client` (paying clients), `demo` (evaluations), `partner` (implementation partners).
+- **Billing statuses**: `free` (no cost), `trial`, `active` (paid), `overdue`, `suspended`, `cancelled`.
+- **Plans**: `free_internal` (internal workspace plan), `starter`, `growth`, `business`, `custom`.
+- Internal workspaces (`workspace_type: internal`, `plan: free_internal`) can never be suspended for billing.
+- Platform admins set workspace type, plan, and billing status via the Workspace form.
+
+Akudzwe Digital Partners is a workspace/tenant inside NiaOS with workspace type `internal`, billing `free`, and plan `free_internal`. Platform admin privileges (like `is_platform_admin`) are attached to individual users, not to any specific workspace.
 
 ## Key Design Decisions
 
@@ -77,6 +94,20 @@ Storage driver auto-selects based on `FILESYSTEM_DISK` env:
 | Accounts | Quotations, tasks |
 | Procurement | Tasks |
 | Viewer | Read-only on all entities |
+
+## Deployment Safety
+
+- **Never** run `migrate:fresh` or `migrate:refresh` on the main (`niaos`) database — it destroys all tenant data.
+- **Never** run `php artisan test` against the main (`niaos`) database — use `.env.testing` (database `niaos_test`) instead.
+- **Never** overwrite `.env` — copy `.env.example` to `.env` only during initial setup.
+- **Always** run `php artisan filament:assets` after Composer install/update, dependency changes, or when Filament CSS/assets go missing.
+
+### Safe deploy
+
+```bash
+chmod +x deploy-refresh.sh
+./deploy-refresh.sh
+```
 
 ## License
 

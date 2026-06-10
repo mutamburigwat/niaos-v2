@@ -2,63 +2,91 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\BillingStatus;
+use App\Enums\Plan;
+use App\Enums\WorkspaceRole;
+use App\Enums\WorkspaceStatus;
+use App\Enums\WorkspaceType;
 use App\Filament\Resources\WorkspaceResource\Pages;
+use App\Filament\Resources\WorkspaceResource\RelationManagers\MembersRelationManager;
 use App\Models\Workspace;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions;
 use Filament\Resources\Resource;
+use Filament\Schemas;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class WorkspaceResource extends Resource
 {
     protected static ?string $model = Workspace::class;
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-office';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\TextInput::make('business_name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('business_type')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('industry')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('country')
-                    ->default('Zimbabwe')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('city')
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('address')
-                    ->columnSpanFull(),
-                Forms\Components\Select::make('base_currency')
-                    ->options([
-                        'USD' => 'USD',
-                        'ZWG' => 'ZWG',
-                        'KES' => 'KES',
-                        'ZAR' => 'ZAR',
-                    ])
-                    ->default('USD'),
-                Forms\Components\Select::make('timezone')
-                    ->options([
-                        'Africa/Harare' => 'Africa/Harare',
-                        'Africa/Nairobi' => 'Africa/Nairobi',
-                        'Africa/Johannesburg' => 'Africa/Johannesburg',
-                        'Africa/Lagos' => 'Africa/Lagos',
-                    ])
-                    ->default('Africa/Harare'),
-                Forms\Components\TextInput::make('subscription_plan')
-                    ->default('free')
-                    ->maxLength(255),
-                Forms\Components\Select::make('onboarding_status')
-                    ->options([
-                        'pending_wizard' => 'Pending Wizard',
-                        'completed' => 'Completed',
-                    ])
-                    ->default('pending_wizard'),
+                Schemas\Components\Section::make('Business Information')
+                    ->schema([
+                        Forms\Components\TextInput::make('business_name')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('business_type')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('industry')
+                            ->maxLength(255),
+                    ])->columns(2),
+                Schemas\Components\Section::make('Location')
+                    ->schema([
+                        Forms\Components\TextInput::make('country')
+                            ->default('Zimbabwe')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('city')
+                            ->maxLength(255),
+                        Forms\Components\Textarea::make('address')
+                            ->columnSpanFull(),
+                    ])->columns(2),
+                Schemas\Components\Section::make('Platform Settings')
+                    ->schema([
+                        Forms\Components\Select::make('workspace_type')
+                            ->options(collect(WorkspaceType::cases())->mapWithKeys(fn ($t) => [$t->value => ucfirst(str_replace('_', ' ', $t->value))]))
+                            ->default('paid_client')
+                            ->visible(fn () => Auth::user()?->isPlatformAdmin() ?? false),
+                        Forms\Components\Select::make('plan')
+                            ->options(collect(Plan::cases())->mapWithKeys(fn ($p) => [$p->value => ucfirst(str_replace('_', ' ', $p->value))]))
+                            ->default('starter')
+                            ->visible(fn () => Auth::user()?->isPlatformAdmin() ?? false),
+                        Forms\Components\Select::make('billing_status')
+                            ->options(collect(BillingStatus::cases())->mapWithKeys(fn ($b) => [$b->value => ucfirst($b->value)]))
+                            ->default('trial')
+                            ->visible(fn () => Auth::user()?->isPlatformAdmin() ?? false),
+                        Forms\Components\Select::make('status')
+                            ->options(collect(WorkspaceStatus::cases())->mapWithKeys(fn ($s) => [$s->value => ucfirst($s->value)]))
+                            ->default('onboarding')
+                            ->visible(fn () => Auth::user()?->isPlatformAdmin() ?? false),
+                    ])->columns(2),
+                Schemas\Components\Section::make('Configuration')
+                    ->schema([
+                        Forms\Components\Select::make('base_currency')
+                            ->options([
+                                'USD' => 'USD',
+                                'ZWG' => 'ZWG',
+                                'KES' => 'KES',
+                                'ZAR' => 'ZAR',
+                            ])
+                            ->default('USD'),
+                        Forms\Components\Select::make('timezone')
+                            ->options([
+                                'Africa/Harare' => 'Africa/Harare',
+                                'Africa/Nairobi' => 'Africa/Nairobi',
+                                'Africa/Johannesburg' => 'Africa/Johannesburg',
+                                'Africa/Lagos' => 'Africa/Lagos',
+                            ])
+                            ->default('Africa/Harare'),
+                    ])->columns(2),
             ]);
     }
 
@@ -69,40 +97,98 @@ class WorkspaceResource extends Resource
                 Tables\Columns\TextColumn::make('business_name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('industry')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('country')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('base_currency'),
-                Tables\Columns\TextColumn::make('subscription_plan')
-                    ->badge(),
-                Tables\Columns\TextColumn::make('onboarding_status')
+                Tables\Columns\TextColumn::make('workspace_type')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'completed' => 'success',
-                        'pending_wizard' => 'warning',
+                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                        'internal' => 'info',
+                        'paid_client' => 'success',
+                        'demo' => 'warning',
+                        'partner' => 'primary',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('plan')
+                    ->badge()
+                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                        'free_internal' => 'info',
+                        'starter' => 'gray',
+                        'growth' => 'warning',
+                        'business' => 'success',
+                        'custom' => 'info',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('billing_status')
+                    ->badge()
+                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                        'free' => 'gray',
+                        'trial' => 'info',
+                        'active' => 'success',
+                        'overdue' => 'warning',
+                        'suspended' => 'danger',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                        'active' => 'success',
+                        'suspended' => 'danger',
+                        'onboarding' => 'warning',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('members_count')
+                    ->label('Clients')
+                    ->counts('members')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('country')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => static::scopeQuery($query))
             ->filters([
-                Tables\Filters\SelectFilter::make('onboarding_status')
-                    ->options([
-                        'pending_wizard' => 'Pending Wizard',
-                        'completed' => 'Completed',
-                    ]),
+                Tables\Filters\SelectFilter::make('workspace_type')
+                    ->options(collect(WorkspaceType::cases())->mapWithKeys(fn ($t) => [$t->value => ucfirst(str_replace('_', ' ', $t->value))])),
+                Tables\Filters\SelectFilter::make('plan')
+                    ->options(collect(Plan::cases())->mapWithKeys(fn ($p) => [$p->value => ucfirst(str_replace('_', ' ', $p->value))])),
+                Tables\Filters\SelectFilter::make('billing_status')
+                    ->options(collect(BillingStatus::cases())->mapWithKeys(fn ($b) => [$b->value => ucfirst($b->value)])),
+                Tables\Filters\SelectFilter::make('status')
+                    ->options(collect(WorkspaceStatus::cases())->mapWithKeys(fn ($s) => [$s->value => ucfirst($s->value)])),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Actions\EditAction::make(),
+                Actions\Action::make('activate')
+                    ->label('Activate')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Workspace $record): bool => $record->status === 'suspended' && Auth::user()?->isPlatformAdmin())
+                    ->action(fn (Workspace $record) => $record->update(['status' => WorkspaceStatus::Active])),
+                Actions\Action::make('suspend')
+                    ->label('Suspend')
+                    ->icon('heroicon-o-minus-circle')
+                    ->color('danger')
+                    ->visible(fn (Workspace $record): bool => ! $record->isInternal() && $record->status !== 'suspended' && Auth::user()?->isPlatformAdmin())
+                    ->action(fn (Workspace $record) => $record->update(['status' => WorkspaceStatus::Suspended])),
+                Actions\DeleteAction::make()
+                    ->visible(fn () => Auth::user()?->isPlatformAdmin()),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->isPlatformAdmin()),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            MembersRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
@@ -112,5 +198,14 @@ class WorkspaceResource extends Resource
             'create' => Pages\CreateWorkspace::route('/create'),
             'edit' => Pages\EditWorkspace::route('/{record}/edit'),
         ];
+    }
+
+    public static function scopeQuery(Builder $query): Builder
+    {
+        if (Auth::user()?->isPlatformAdmin()) {
+            return $query;
+        }
+
+        return $query->whereHas('members', fn ($q) => $q->where('user_id', Auth::id()));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\LeadResource\Pages;
 
 use App\Filament\Resources\LeadResource;
+use App\Services\WorkspaceContext;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateLead extends CreateRecord
@@ -11,7 +12,7 @@ class CreateLead extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['workspace_id'] = auth()->user()->active_workspace_id;
+        $data['workspace_id'] = WorkspaceContext::activeWorkspaceId();
         return $data;
     }
 }

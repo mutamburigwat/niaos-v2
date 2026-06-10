@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\BillingStatus;
+use App\Enums\Plan;
+use App\Enums\WorkspaceStatus;
+use App\Enums\WorkspaceType;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,13 +18,16 @@ class Workspace extends Model
     protected $fillable = [
         'business_name',
         'business_type',
+        'workspace_type',
         'industry',
         'country',
         'city',
         'address',
         'base_currency',
         'timezone',
-        'subscription_plan',
+        'plan',
+        'billing_status',
+        'status',
         'onboarding_status',
         'channels_config',
         'created_by',
@@ -30,6 +37,10 @@ class Workspace extends Model
     {
         return [
             'channels_config' => 'array',
+            'status' => WorkspaceStatus::class,
+            'plan' => Plan::class,
+            'workspace_type' => WorkspaceType::class,
+            'billing_status' => BillingStatus::class,
         ];
     }
 
@@ -76,5 +87,35 @@ class Workspace extends Model
     public function joseConversations(): HasMany
     {
         return $this->hasMany(JoseConversation::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', WorkspaceStatus::Active);
+    }
+
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', WorkspaceStatus::Suspended);
+    }
+
+    public function scopeOnboarding($query)
+    {
+        return $query->where('status', WorkspaceStatus::Onboarding);
+    }
+
+    public function scopeInternal($query)
+    {
+        return $query->where('workspace_type', WorkspaceType::Internal);
+    }
+
+    public function scopePaidClient($query)
+    {
+        return $query->where('workspace_type', WorkspaceType::PaidClient);
+    }
+
+    public function isInternal(): bool
+    {
+        return $this->workspace_type === WorkspaceType::Internal;
     }
 }

@@ -5,51 +5,62 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TaskResource\Pages;
 use App\Models\Task;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions;
 use Filament\Resources\Resource;
+use Filament\Schemas;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TaskResource extends Resource
 {
     protected static ?string $model = Task::class;
-    protected static ?string $navigationIcon = 'heroicon-o-check-circle';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-check-circle';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('description')
-                    ->columnSpanFull(),
-                Forms\Components\Select::make('customer_id')
-                    ->relationship('customer', 'name')
-                    ->searchable()
-                    ->preload(),
-                Forms\Components\Select::make('lead_id')
-                    ->relationship('lead', 'title')
-                    ->searchable()
-                    ->preload(),
-                Forms\Components\Select::make('assigned_to')
-                    ->relationship('assignedStaff', 'name')
-                    ->searchable()
-                    ->preload(),
-                Forms\Components\Select::make('priority')
-                    ->options([
-                        'high' => 'High',
-                        'medium' => 'Medium',
-                        'low' => 'Low',
+                Schemas\Components\Section::make('Task Details')
+                    ->schema([
+                        Forms\Components\TextInput::make('title')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Textarea::make('description')
+                            ->columnSpanFull(),
+                        Forms\Components\Select::make('customer_id')
+                            ->relationship('customer', 'name')
+                            ->searchable()
+                            ->preload(),
+                        Forms\Components\Select::make('lead_id')
+                            ->relationship('lead', 'title')
+                            ->searchable()
+                            ->preload(),
                     ])
-                    ->default('medium'),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'completed' => 'Completed',
+                    ->columns(2),
+                Schemas\Components\Section::make('Assignment')
+                    ->schema([
+                        Forms\Components\Select::make('assigned_to')
+                            ->relationship('assignedStaff', 'name')
+                            ->searchable()
+                            ->preload(),
+                        Forms\Components\Select::make('priority')
+                            ->options([
+                                'high' => 'High',
+                                'medium' => 'Medium',
+                                'low' => 'Low',
+                            ])
+                            ->default('medium'),
+                        Forms\Components\Select::make('status')
+                            ->options([
+                                'pending' => 'Pending',
+                                'completed' => 'Completed',
+                            ])
+                            ->default('pending'),
+                        Forms\Components\DateTimePicker::make('due_date'),
                     ])
-                    ->default('pending'),
-                Forms\Components\DateTimePicker::make('due_date'),
+                    ->columns(2),
             ]);
     }
 
@@ -61,7 +72,13 @@ class TaskResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('customer.name')
-                    ->searchable(),
+                    ->label('Customer')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('lead.title')
+                    ->label('Lead')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('priority')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -78,15 +95,24 @@ class TaskResource extends Resource
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('assignedStaff.name')
-                    ->label('Assigned To'),
+                    ->label('Assigned To')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('due_date')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->color(fn (?Task $record): string => match (true) {
+                        $record?->due_date === null => 'gray',
+                        $record->due_date->isPast() && $record->status === 'pending' => 'danger',
+                        $record->due_date->isToday() && $record->status === 'pending' => 'warning',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => $query->currentWorkspace())
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
@@ -99,14 +125,27 @@ class TaskResource extends Resource
                         'medium' => 'Medium',
                         'low' => 'Low',
                     ]),
+                Tables\Filters\SelectFilter::make('assigned_to')
+                    ->relationship('assignedStaff', 'name'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Actions\ActionGroup::make([
+                    Actions\EditAction::make(),
+                    Actions\Action::make('complete')
+                        ->label('Mark Complete')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->visible(fn (Task $record): bool => $record->status === 'pending')
+                        ->action(fn (Task $record) => $record->update([
+                            'status' => 'completed',
+                            'completed_at' => now(),
+                        ])),
+                    Actions\DeleteAction::make(),
+                ]),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

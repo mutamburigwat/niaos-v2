@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\Workspace;
+use App\Services\WorkspaceContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,10 +19,23 @@ trait BelongsToWorkspace
         return $query->where('workspace_id', $workspaceId);
     }
 
+    public function scopeCurrentWorkspace(Builder $query): Builder
+    {
+        $workspaceId = WorkspaceContext::activeWorkspaceId();
+
+        if ($workspaceId !== null) {
+            $query->where('workspace_id', $workspaceId);
+        }
+
+        return $query;
+    }
+
     protected static function bootBelongsToWorkspace(): void
     {
         static::addGlobalScope('workspace', function (Builder $builder) {
-            if ($workspaceId = request()->user()?->active_workspace_id) {
+            $workspaceId = WorkspaceContext::activeWorkspaceId();
+
+            if ($workspaceId !== null) {
                 $builder->where('workspace_id', $workspaceId);
             }
         });

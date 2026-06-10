@@ -5,43 +5,54 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FileRecordResource\Pages;
 use App\Models\FileRecord;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions;
 use Filament\Resources\Resource;
+use Filament\Schemas;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class FileRecordResource extends Resource
 {
     protected static ?string $model = FileRecord::class;
-    protected static ?string $navigationIcon = 'heroicon-o-folder';
-    protected static ?string $navigationGroup = 'Records';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-folder';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\TextInput::make('file_name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('file_url')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('file_type')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('file_size')
-                    ->numeric()
-                    ->required(),
-                Forms\Components\Select::make('related_entity_type')
-                    ->options([
-                        'customer' => 'Customer',
-                        'task' => 'Task',
-                        'quotation' => 'Quotation',
-                    ]),
-                Forms\Components\TextInput::make('related_entity_id')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('uploaded_by')
-                    ->maxLength(255),
+                Schemas\Components\Section::make('File Information')
+                    ->schema([
+                        Forms\Components\TextInput::make('file_name')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('file_url')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('file_type')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('file_size')
+                            ->numeric()
+                            ->required()
+                            ->suffix('bytes'),
+                    ])
+                    ->columns(2),
+                Schemas\Components\Section::make('Linked Entity')
+                    ->schema([
+                        Forms\Components\Select::make('related_entity_type')
+                            ->options([
+                                'customer' => 'Customer',
+                                'lead' => 'Lead',
+                                'task' => 'Task',
+                                'quotation' => 'Quotation',
+                            ]),
+                        Forms\Components\TextInput::make('related_entity_id')
+                            ->maxLength(255),
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -50,7 +61,8 @@ class FileRecordResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('file_name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('file_type')
                     ->badge(),
                 Tables\Columns\TextColumn::make('file_size')
@@ -59,7 +71,8 @@ class FileRecordResource extends Resource
                         : round($state / 1024, 1) . ' KB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('related_entity_type')
-                    ->label('Linked To'),
+                    ->label('Linked To')
+                    ->badge(),
                 Tables\Columns\TextColumn::make('uploaded_by')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -67,14 +80,25 @@ class FileRecordResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([])
+            ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => $query->currentWorkspace())
+            ->filters([
+                Tables\Filters\SelectFilter::make('related_entity_type')
+                    ->options([
+                        'customer' => 'Customer',
+                        'lead' => 'Lead',
+                        'task' => 'Task',
+                        'quotation' => 'Quotation',
+                    ]),
+                Tables\Filters\SelectFilter::make('file_type'),
+            ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

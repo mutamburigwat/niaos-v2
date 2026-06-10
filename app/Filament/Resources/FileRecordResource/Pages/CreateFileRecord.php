@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FileRecordResource\Pages;
 
 use App\Filament\Resources\FileRecordResource;
+use App\Services\WorkspaceContext;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateFileRecord extends CreateRecord
@@ -11,7 +12,8 @@ class CreateFileRecord extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['workspace_id'] = auth()->user()->active_workspace_id;
+        $data['workspace_id'] = WorkspaceContext::activeWorkspaceId();
+        $data['uploaded_by'] = auth()->id();
         return $data;
     }
 }

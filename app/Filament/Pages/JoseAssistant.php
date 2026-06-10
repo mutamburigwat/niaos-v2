@@ -6,11 +6,11 @@ use Filament\Pages\Page;
 
 class JoseAssistant extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-sparkles';
-    protected static string $view = 'filament.pages.jose-assistant';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-sparkles';
+    protected string $view = 'filament.pages.jose-assistant';
     protected static ?string $slug = 'jose-assistant';
     protected static ?string $title = 'Jose Assistant';
-    protected static ?string $navigationGroup = 'AI';
+    protected static string | \UnitEnum | null $navigationGroup = 'AI';
 
     public function getViewData(): array
     {

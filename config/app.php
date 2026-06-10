@@ -45,7 +45,9 @@ return [
         Illuminate\View\ViewServiceProvider::class,
 
         App\Providers\AppServiceProvider::class,
+        App\Providers\AuthServiceProvider::class,
         App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\PlatformPanelProvider::class,
     ],
     'aliases' => Illuminate\Support\Facades\Facade::defaultAliases()->toArray(),
 ];

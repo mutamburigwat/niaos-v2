@@ -2,8 +2,16 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\JoseAssistant;
 use App\Filament\Pages\WorkspaceSwitcher;
+use App\Http\Middleware\EnsureActiveWorkspaceIsValid;
+use App\Filament\Resources\ActivityLogResource;
+use App\Filament\Resources\CustomerResource;
+use App\Filament\Resources\FileRecordResource;
+use App\Filament\Resources\LeadResource;
+use App\Filament\Resources\QuotationResource;
+use App\Filament\Resources\TaskResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -11,11 +19,9 @@ use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -30,8 +36,8 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('admin')
-            ->path('admin')
+            ->id('app')
+            ->path('app')
             ->login()
             ->passwordReset()
             ->colors([
@@ -40,39 +46,59 @@ class AdminPanelProvider extends PanelProvider
             ->font('Manrope')
             ->brandName('NiaOS')
             ->favicon(asset('favicon.ico'))
+            ->viteTheme('resources/css/app.css')
+            ->resources([
+                CustomerResource::class,
+                LeadResource::class,
+                TaskResource::class,
+                QuotationResource::class,
+                FileRecordResource::class,
+                ActivityLogResource::class,
+            ])
+            ->pages([
+                Dashboard::class,
+                WorkspaceSwitcher::class,
+                JoseAssistant::class,
+            ])
+            ->homeUrl(fn (): string => Dashboard::getUrl())
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
-                return $builder
-                    ->groups([
-                        NavigationGroup::make('Workspace')
-                            ->items([
-                                NavigationItem::make('Dashboard')
-                                    ->icon('heroicon-o-home')
-                                    ->url(fn () => Pages\Dashboard::getUrl()),
-                                ...WorkspaceResourceNavigation(),
-                            ]),
-                        NavigationGroup::make('CRM')
-                            ->items([
-                                ...CustomerResourceNavigation(),
-                                ...LeadResourceNavigation(),
-                            ]),
-                        NavigationGroup::make('Operations')
-                            ->items([
-                                ...TaskResourceNavigation(),
-                                ...QuotationResourceNavigation(),
-                            ]),
-                        NavigationGroup::make('Records')
-                            ->items([
-                                ...FileRecordResourceNavigation(),
-                                ...ActivityLogResourceNavigation(),
-                            ]),
-                        NavigationGroup::make('AI')
-                            ->items([
-                                NavigationItem::make('Jose Assistant')
-                                    ->icon('heroicon-o-sparkles')
-                                    ->url(fn () => JoseAssistant::getUrl())
-                                    ->isActiveWhen(fn () => request()->routeIs('filament.admin.pages.jose-assistant')),
-                            ]),
+                $groups = [];
+
+                $groups[] = NavigationGroup::make('Dashboard')
+                    ->items([
+                        NavigationItem::make('Workspace Overview')
+                            ->icon('heroicon-o-home')
+                            ->url(fn () => Dashboard::getUrl())
+                            ->isActiveWhen(fn () => request()->routeIs('filament.app.pages.dashboard')),
                     ]);
+
+                $groups[] = NavigationGroup::make('CRM')
+                    ->items([
+                        ...CustomerResourceNavigation(),
+                        ...LeadResourceNavigation(),
+                    ]);
+
+                $groups[] = NavigationGroup::make('Operations')
+                    ->items([
+                        ...TaskResourceNavigation(),
+                        ...QuotationResourceNavigation(),
+                    ]);
+
+                $groups[] = NavigationGroup::make('Records')
+                    ->items([
+                        ...FileRecordResourceNavigation(),
+                        ...ActivityLogResourceNavigation(),
+                    ]);
+
+                $groups[] = NavigationGroup::make('AI')
+                    ->items([
+                        NavigationItem::make('Jose Assistant')
+                            ->icon('heroicon-o-sparkles')
+                            ->url(fn () => JoseAssistant::getUrl())
+                            ->isActiveWhen(fn () => request()->routeIs('filament.app.pages.jose-assistant')),
+                    ]);
+
+                return $builder->groups($groups);
             })
             ->userMenuItems([
                 MenuItem::make()
@@ -90,21 +116,12 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                EnsureActiveWorkspaceIsValid::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
             ]);
     }
-}
-
-function WorkspaceResourceNavigation(): array
-{
-    return [
-        NavigationItem::make('Workspaces')
-            ->icon('heroicon-o-building-office')
-            ->url(fn () => \App\Filament\Resources\WorkspaceResource::getUrl())
-            ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.workspaces.*')),
-    ];
 }
 
 function CustomerResourceNavigation(): array
@@ -113,7 +130,7 @@ function CustomerResourceNavigation(): array
         NavigationItem::make('Customers')
             ->icon('heroicon-o-users')
             ->url(fn () => \App\Filament\Resources\CustomerResource::getUrl())
-            ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.customers.*')),
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.customers.*')),
     ];
 }
 
@@ -121,9 +138,9 @@ function LeadResourceNavigation(): array
 {
     return [
         NavigationItem::make('Leads')
-            ->icon('heroicon-o-trending-up')
+            ->icon('heroicon-o-arrow-trending-up')
             ->url(fn () => \App\Filament\Resources\LeadResource::getUrl())
-            ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.leads.*')),
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.leads.*')),
     ];
 }
 
@@ -133,7 +150,7 @@ function TaskResourceNavigation(): array
         NavigationItem::make('Tasks')
             ->icon('heroicon-o-check-circle')
             ->url(fn () => \App\Filament\Resources\TaskResource::getUrl())
-            ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.tasks.*')),
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.tasks.*')),
     ];
 }
 
@@ -143,7 +160,7 @@ function QuotationResourceNavigation(): array
         NavigationItem::make('Quotations')
             ->icon('heroicon-o-document-text')
             ->url(fn () => \App\Filament\Resources\QuotationResource::getUrl())
-            ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.quotations.*')),
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.quotations.*')),
     ];
 }
 
@@ -153,7 +170,7 @@ function FileRecordResourceNavigation(): array
         NavigationItem::make('Files')
             ->icon('heroicon-o-folder')
             ->url(fn () => \App\Filament\Resources\FileRecordResource::getUrl())
-            ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.file-records.*')),
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.file-records.*')),
     ];
 }
 
@@ -163,6 +180,6 @@ function ActivityLogResourceNavigation(): array
         NavigationItem::make('Activity Logs')
             ->icon('heroicon-o-clock')
             ->url(fn () => \App\Filament\Resources\ActivityLogResource::getUrl())
-            ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.activity-logs.*')),
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.activity-logs.*')),
     ];
 }

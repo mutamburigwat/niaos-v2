@@ -25,6 +25,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'settings'  => ['view', 'edit'],
             'ai'        => ['view'],
             'users'     => ['invite', 'manage'],
+            'platform'  => ['manage'],
         ];
 
         foreach ($modulePermissions as $module => $actions) {
@@ -46,6 +47,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'activity_logs.view',
                 'settings.view',
                 'ai.view',
+                'users.invite',
             ],
             WorkspaceRole::Sales->value => [
                 'dashboard.view',
@@ -88,5 +90,8 @@ class RolesAndPermissionsSeeder extends Seeder
             $role = Role::create(['name' => $roleName, 'guard_name' => 'web']);
             $role->givePermissionTo($permissions);
         }
+
+        $platformAdminRole = Role::create(['name' => 'platform_admin', 'guard_name' => 'web']);
+        $platformAdminRole->givePermissionTo(Permission::all());
     }
 }

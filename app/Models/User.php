@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToWorkspace;
 use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasTenant;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,6 +22,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'avatar_url',
         'active_workspace_id',
+        'is_platform_admin',
     ];
 
     protected $hidden = [
@@ -35,12 +35,23 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_platform_admin' => 'boolean',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
+    }
+
+    public function isPlatformAdmin(): bool
+    {
+        return $this->is_platform_admin;
+    }
+
+    public function activeWorkspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class, 'active_workspace_id');
     }
 
     public function workspaces(): BelongsToMany
