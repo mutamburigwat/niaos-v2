@@ -117,7 +117,13 @@ class RetainerResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('next_billing_date')
                     ->date()
-                    ->sortable(),
+                    ->sortable()
+                    ->color(fn (?Retainer $record): string => match (true) {
+                        $record?->next_billing_date === null => 'gray',
+                        $record->next_billing_date->isPast() && in_array($record->status, ['active', 'overdue']) => 'danger',
+                        $record->next_billing_date->isToday() => 'warning',
+                        default => 'gray',
+                    }),
             ])
             ->defaultSort('created_at', 'desc')
             ->modifyQueryUsing(fn (Builder $query) => $query->currentWorkspace())
