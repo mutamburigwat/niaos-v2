@@ -2,8 +2,7 @@
 
 namespace App\Filament\Resources\CustomerResource\RelationManagers;
 
-use App\Models\User;
-use App\Services\WorkspaceContext;
+use App\Models\Customer;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -11,9 +10,9 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class TasksRelationManager extends RelationManager
+class SupportRequestsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'tasks';
+    protected static string $relationship = 'supportRequests';
     protected static ?string $recordTitleAttribute = 'title';
 
     public function form(Schema $schema): Schema
@@ -23,24 +22,25 @@ class TasksRelationManager extends RelationManager
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description'),
-                Forms\Components\Select::make('assigned_to')
-                    ->options(fn () => User::whereHas('workspaceMembers', fn ($q) => $q->where('workspace_id', WorkspaceContext::activeWorkspaceId())->where('status', 'active'))->orderBy('name')->pluck('name', 'id'))
-                    ->searchable(),
-                Forms\Components\DateTimePicker::make('due_date'),
                 Forms\Components\Select::make('priority')
                     ->options([
-                        'high' => 'High',
-                        'medium' => 'Medium',
                         'low' => 'Low',
+                        'normal' => 'Normal',
+                        'high' => 'High',
+                        'urgent' => 'Urgent',
                     ])
-                    ->default('medium'),
+                    ->default('normal'),
                 Forms\Components\Select::make('status')
                     ->options([
-                        'pending' => 'Pending',
-                        'completed' => 'Completed',
+                        'open' => 'Open',
+                        'in_progress' => 'In Progress',
+                        'waiting_client' => 'Waiting Client',
+                        'resolved' => 'Resolved',
+                        'closed' => 'Closed',
                     ])
-                    ->default('pending'),
+                    ->default('open'),
+                Forms\Components\DateTimePicker::make('due_date')
+                    ->nullable(),
             ]);
     }
 
@@ -49,27 +49,33 @@ class TasksRelationManager extends RelationManager
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('title')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('assignedStaff.name')
-                    ->label('Assigned To')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('priority')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'high' => 'danger',
-                        'medium' => 'warning',
-                        'low' => 'primary',
+                        'low' => 'gray',
+                        'normal' => 'primary',
+                        'high' => 'warning',
+                        'urgent' => 'danger',
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'completed' => 'success',
+                        'open' => 'gray',
+                        'in_progress' => 'info',
+                        'waiting_client' => 'warning',
+                        'resolved' => 'success',
+                        'closed' => 'primary',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('assignedTo.name')
+                    ->label('Assigned To')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('due_date')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
             ])

@@ -9,6 +9,9 @@ use App\Models\JoseConversation;
 use App\Models\JoseMessage;
 use App\Models\Lead;
 use App\Models\Quotation;
+use App\Models\Retainer;
+use App\Models\Service;
+use App\Models\SupportRequest;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Workspace;
@@ -19,6 +22,9 @@ use App\Policies\JoseConversationPolicy;
 use App\Policies\JoseMessagePolicy;
 use App\Policies\LeadPolicy;
 use App\Policies\QuotationPolicy;
+use App\Policies\RetainerPolicy;
+use App\Policies\ServicePolicy;
+use App\Policies\SupportRequestPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WorkspacePolicy;
@@ -37,6 +43,9 @@ class AuthServiceProvider extends ServiceProvider
         JoseMessage::class => JoseMessagePolicy::class,
         Workspace::class => WorkspacePolicy::class,
         User::class => UserPolicy::class,
+        Service::class => ServicePolicy::class,
+        Retainer::class => RetainerPolicy::class,
+        SupportRequest::class => SupportRequestPolicy::class,
     ];
 
     public function boot(): void

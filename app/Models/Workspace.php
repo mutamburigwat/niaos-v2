@@ -96,6 +96,21 @@ class Workspace extends Model
         return $this->hasMany(JoseConversation::class);
     }
 
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    public function retainers(): HasMany
+    {
+        return $this->hasMany(Retainer::class);
+    }
+
+    public function supportRequests(): HasMany
+    {
+        return $this->hasMany(SupportRequest::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', WorkspaceStatus::Active);

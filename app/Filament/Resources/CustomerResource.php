@@ -6,6 +6,8 @@ use App\Filament\Resources\CustomerResource\Pages;
 use App\Models\Customer;
 use App\Models\Lead;
 use App\Models\Task;
+use App\Models\User;
+use App\Services\WorkspaceContext;
 use Filament\Forms;
 use Filament\Actions;
 use Filament\Resources\Resource;
@@ -62,9 +64,8 @@ class CustomerResource extends Resource
                             ->default('website'),
                         Forms\Components\TagsInput::make('tags'),
                         Forms\Components\Select::make('assigned_to')
-                            ->relationship('assignedStaff', 'name')
-                            ->searchable()
-                            ->preload(),
+                            ->options(fn () => User::whereHas('workspaceMembers', fn ($q) => $q->where('workspace_id', WorkspaceContext::activeWorkspaceId())->where('status', 'active'))->orderBy('name')->pluck('name', 'id'))
+                            ->searchable(),
                     ])
                     ->columns(2),
                 Schemas\Components\Section::make('Notes')
@@ -135,7 +136,8 @@ class CustomerResource extends Resource
                         'referral' => 'Referral',
                     ]),
                 Tables\Filters\SelectFilter::make('assigned_to')
-                    ->relationship('assignedStaff', 'name'),
+                    ->label('Assigned To')
+                    ->options(fn () => User::whereHas('workspaceMembers', fn ($q) => $q->where('workspace_id', WorkspaceContext::activeWorkspaceId())->where('status', 'active'))->orderBy('name')->pluck('name', 'id')),
             ])
             ->actions([
                 Actions\ActionGroup::make([
@@ -218,6 +220,8 @@ class CustomerResource extends Resource
             \App\Filament\Resources\CustomerResource\RelationManagers\LeadsRelationManager::class,
             \App\Filament\Resources\CustomerResource\RelationManagers\TasksRelationManager::class,
             \App\Filament\Resources\CustomerResource\RelationManagers\QuotationsRelationManager::class,
+            \App\Filament\Resources\CustomerResource\RelationManagers\RetainersRelationManager::class,
+            \App\Filament\Resources\CustomerResource\RelationManagers\SupportRequestsRelationManager::class,
         ];
     }
 

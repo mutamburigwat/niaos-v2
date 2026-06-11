@@ -6,6 +6,8 @@ use App\Filament\Resources\LeadResource\Pages;
 use App\Models\Lead;
 use App\Models\Quotation;
 use App\Models\Task;
+use App\Models\User;
+use App\Services\WorkspaceContext;
 use Filament\Forms;
 use Filament\Actions;
 use Filament\Resources\Resource;
@@ -81,9 +83,8 @@ class LeadResource extends Resource
                                 'other' => 'Other',
                             ]),
                         Forms\Components\Select::make('assigned_to')
-                            ->relationship('assignedStaff', 'name')
-                            ->searchable()
-                            ->preload(),
+                            ->options(fn () => User::whereHas('workspaceMembers', fn ($q) => $q->where('workspace_id', WorkspaceContext::activeWorkspaceId())->where('status', 'active'))->orderBy('name')->pluck('name', 'id'))
+                            ->searchable(),
                         Forms\Components\DateTimePicker::make('next_follow_up_date'),
                     ])
                     ->columns(2),
@@ -159,7 +160,8 @@ class LeadResource extends Resource
                         'low' => 'Low',
                     ]),
                 Tables\Filters\SelectFilter::make('assigned_to')
-                    ->relationship('assignedStaff', 'name'),
+                    ->label('Assigned To')
+                    ->options(fn () => User::whereHas('workspaceMembers', fn ($q) => $q->where('workspace_id', WorkspaceContext::activeWorkspaceId())->where('status', 'active'))->orderBy('name')->pluck('name', 'id')),
             ])
             ->actions([
                 Actions\ActionGroup::make([

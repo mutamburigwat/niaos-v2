@@ -11,6 +11,9 @@ use App\Filament\Resources\CustomerResource;
 use App\Filament\Resources\FileRecordResource;
 use App\Filament\Resources\LeadResource;
 use App\Filament\Resources\QuotationResource;
+use App\Filament\Resources\RetainerResource;
+use App\Filament\Resources\ServiceResource;
+use App\Filament\Resources\SupportRequestResource;
 use App\Filament\Resources\TaskResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -52,6 +55,9 @@ class AdminPanelProvider extends PanelProvider
                 LeadResource::class,
                 TaskResource::class,
                 QuotationResource::class,
+                RetainerResource::class,
+                SupportRequestResource::class,
+                ServiceResource::class,
                 FileRecordResource::class,
                 ActivityLogResource::class,
             ])
@@ -82,10 +88,13 @@ class AdminPanelProvider extends PanelProvider
                     ->items([
                         ...TaskResourceNavigation(),
                         ...QuotationResourceNavigation(),
+                        ...RetainerResourceNavigation(),
+                        ...SupportRequestResourceNavigation(),
                     ]);
 
-                $groups[] = NavigationGroup::make('Records')
+                $groups[] = NavigationGroup::make('Workspace')
                     ->items([
+                        ...ServiceResourceNavigation(),
                         ...FileRecordResourceNavigation(),
                         ...ActivityLogResourceNavigation(),
                     ]);
@@ -181,5 +190,35 @@ function ActivityLogResourceNavigation(): array
             ->icon('heroicon-o-clock')
             ->url(fn () => \App\Filament\Resources\ActivityLogResource::getUrl())
             ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.activity-logs.*')),
+    ];
+}
+
+function RetainerResourceNavigation(): array
+{
+    return [
+        NavigationItem::make('Retainers')
+            ->icon('heroicon-o-credit-card')
+            ->url(fn () => \App\Filament\Resources\RetainerResource::getUrl())
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.retainers.*')),
+    ];
+}
+
+function SupportRequestResourceNavigation(): array
+{
+    return [
+        NavigationItem::make('Support Requests')
+            ->icon('heroicon-o-lifebuoy')
+            ->url(fn () => \App\Filament\Resources\SupportRequestResource::getUrl())
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.support-requests.*')),
+    ];
+}
+
+function ServiceResourceNavigation(): array
+{
+    return [
+        NavigationItem::make('Services')
+            ->icon('heroicon-o-wrench')
+            ->url(fn () => \App\Filament\Resources\ServiceResource::getUrl())
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.services.*')),
     ];
 }

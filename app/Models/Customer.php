@@ -55,4 +55,14 @@ class Customer extends Model
     {
         return $this->hasMany(Quotation::class);
     }
+
+    public function retainers(): HasMany
+    {
+        return $this->hasMany(Retainer::class);
+    }
+
+    public function supportRequests(): HasMany
+    {
+        return $this->hasMany(SupportRequest::class);
+    }
 }
