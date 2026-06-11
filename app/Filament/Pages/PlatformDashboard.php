@@ -2,9 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Customer;
-use App\Models\Lead;
-use App\Models\Task;
 use App\Models\User;
 use App\Models\Workspace;
 use Filament\Pages\Page;
@@ -16,7 +13,7 @@ class PlatformDashboard extends Page
     protected static ?int $navigationSort = 0;
     protected string $view = 'filament.pages.platform-dashboard';
     protected static ?string $slug = 'platform';
-    protected static ?string $title = 'Platform Admin';
+    protected static ?string $title = 'NiaOS Platform Console';
     protected static string | \UnitEnum | null $navigationGroup = 'Platform';
 
     public static function canAccess(): bool
@@ -59,6 +56,11 @@ class PlatformDashboard extends Page
         return Workspace::where('workspace_type', 'paid_client')->count();
     }
 
+    public function getInternalWorkspaces(): int
+    {
+        return Workspace::where('workspace_type', 'internal')->count();
+    }
+
     public function getTotalUsers(): int
     {
         return User::count();
@@ -67,5 +69,15 @@ class PlatformDashboard extends Page
     public function getPlatformAdmins(): int
     {
         return User::where('is_platform_admin', true)->count();
+    }
+
+    public function getRecentWorkspaces(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Workspace::latest()->limit(5)->get(['id', 'business_name', 'workspace_type', 'plan', 'created_at']);
+    }
+
+    public function getRecentUsers(): \Illuminate\Database\Eloquent\Collection
+    {
+        return User::latest()->limit(5)->get(['id', 'name', 'email', 'is_platform_admin', 'created_at']);
     }
 }
