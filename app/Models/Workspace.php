@@ -111,6 +111,11 @@ class Workspace extends Model
         return $this->hasMany(SupportRequest::class);
     }
 
+    public function customerContacts(): HasMany
+    {
+        return $this->hasMany(CustomerContact::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', WorkspaceStatus::Active);

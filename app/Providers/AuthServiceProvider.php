@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\ActivityLog;
 use App\Models\Customer;
+use App\Models\CustomerContact;
 use App\Models\FileRecord;
 use App\Models\JoseConversation;
 use App\Models\JoseMessage;
@@ -16,6 +17,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Policies\ActivityLogPolicy;
+use App\Policies\CustomerContactPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\FileRecordPolicy;
 use App\Policies\JoseConversationPolicy;
@@ -46,6 +48,7 @@ class AuthServiceProvider extends ServiceProvider
         Service::class => ServicePolicy::class,
         Retainer::class => RetainerPolicy::class,
         SupportRequest::class => SupportRequestPolicy::class,
+        CustomerContact::class => CustomerContactPolicy::class,
     ];
 
     public function boot(): void

@@ -222,34 +222,34 @@
                         @endif
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
-                    <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Active Retainers</h3>
-                    </div>
-                    <div class="p-5">
-                        @php $retainers = $this->getActiveRetainers(); @endphp
-                        @if ($retainers->count() > 0)
-                            <div class="space-y-3">
-                                @foreach ($retainers as $retainer)
-                                    <div class="flex items-center justify-between">
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $retainer->title }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $retainer->customer?->name ?? '—' }} &middot; ${{ number_format($retainer->amount, 2) }}/{{ ucfirst($retainer->billing_cycle) }}</p>
-                                        </div>
-                                        @if ($retainer->next_billing_date && $retainer->next_billing_date->isPast())
-                                            <x-filament::badge color="danger">Overdue</x-filament::badge>
-                                        @else
-                                            <span class="shrink-0 text-xs text-gray-400">{{ $retainer->next_billing_date?->format('M j') ?? '—' }}</span>
-                                        @endif
-                                    </div>
-                                @endforeach
+        <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+            <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Active Retainers</h3>
+            </div>
+            <div class="p-5">
+                @php $retainers = $this->getActiveRetainers(); @endphp
+                @if ($retainers->count() > 0)
+                    <div class="space-y-3">
+                        @foreach ($retainers as $retainer)
+                            <div class="flex items-center justify-between">
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $retainer->title }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $retainer->customer?->name ?? '—' }} &middot; ${{ number_format($retainer->amount, 2) }}/{{ ucfirst($retainer->billing_cycle) }}</p>
+                                </div>
+                                @if ($retainer->next_billing_date && $retainer->next_billing_date->isPast())
+                                    <x-filament::badge color="danger">Overdue</x-filament::badge>
+                                @else
+                                    <span class="shrink-0 text-xs text-gray-400">{{ $retainer->next_billing_date?->format('M j') ?? '—' }}</span>
+                                @endif
                             </div>
-                        @else
-                            <p class="text-sm text-gray-400 dark:text-gray-500">No active retainers.</p>
-                        @endif
+                        @endforeach
                     </div>
-                </div>
+                @else
+                    <p class="text-sm text-gray-400 dark:text-gray-500">No active retainers.</p>
+                @endif
             </div>
         </div>
     </div>

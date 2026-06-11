@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Customer;
+use App\Models\CustomerContact;
 use App\Models\FileRecord;
 use App\Models\Lead;
 use App\Models\Quotation;
@@ -30,5 +31,6 @@ class AppServiceProvider extends ServiceProvider
         Service::observe(ActivityLogObserver::class);
         Retainer::observe(ActivityLogObserver::class);
         SupportRequest::observe(ActivityLogObserver::class);
+        CustomerContact::observe(ActivityLogObserver::class);
     }
 }
