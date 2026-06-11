@@ -127,7 +127,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-sm text-gray-400 dark:text-gray-500">No activity yet.</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500">No activity yet. Start by adding your first customer.</p>
                         @endif
                     </div>
                 </div>
@@ -159,7 +159,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-sm text-gray-400 dark:text-gray-500">No leads yet.</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500">No leads yet. Start building your pipeline.</p>
                         @endif
                     </div>
                 </div>
@@ -187,7 +187,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-sm text-gray-400 dark:text-gray-500">No upcoming tasks.</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500">No upcoming tasks. Create your first task to stay organised.</p>
                         @endif
                     </div>
                 </div>
@@ -218,7 +218,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-sm text-gray-400 dark:text-gray-500">No open support requests.</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500">No open support requests. All clear.</p>
                         @endif
                     </div>
                 </div>
@@ -248,7 +248,7 @@
                         @endforeach
                     </div>
                 @else
-                    <p class="text-sm text-gray-400 dark:text-gray-500">No active retainers.</p>
+                    <p class="text-sm text-gray-400 dark:text-gray-500">No active retainers. Set up retainers for recurring revenue.</p>
                 @endif
             </div>
         </div>

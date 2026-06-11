@@ -22,7 +22,7 @@ class Dashboard extends Page
     protected static ?int $navigationSort = 1;
     protected string $view = 'filament.pages.dashboard';
     protected static ?string $slug = 'dashboard';
-    protected static ?string $title = 'Workspace Overview';
+    protected static ?string $title = 'NiaOS Workspace App';
 
     public function getUser(): \App\Models\User
     {

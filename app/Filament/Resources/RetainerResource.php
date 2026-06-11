@@ -3,11 +3,15 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RetainerResource\Pages;
+use App\Models\Customer;
 use App\Models\Retainer;
+use App\Models\Service;
+use App\Services\WorkspaceContext;
 use Filament\Forms;
 use Filament\Actions;
 use Filament\Resources\Resource;
 use Filament\Schemas;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -22,57 +26,56 @@ class RetainerResource extends Resource
     {
         return $schema
             ->schema([
-                Schemas\Components\Section::make('Retainer Details')
+                Grid::make(2)
                     ->schema([
-                        Forms\Components\TextInput::make('title')
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\Select::make('customer_id')
-                            ->relationship('customer', 'name')
-                            ->searchable()
-                            ->preload(),
-                        Forms\Components\Select::make('service_id')
-                            ->relationship('service', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->nullable(),
-                        Forms\Components\Select::make('billing_cycle')
-                            ->options([
-                                'monthly' => 'Monthly',
-                                'quarterly' => 'Quarterly',
-                                'yearly' => 'Yearly',
-                                'custom' => 'Custom',
-                            ])
-                            ->default('monthly'),
-                    ])
-                    ->columns(2),
-                Schemas\Components\Section::make('Pricing')
-                    ->schema([
-                        Forms\Components\TextInput::make('amount')
-                            ->numeric()
-                            ->prefix('USD')
-                            ->default(0),
-                        Forms\Components\Select::make('currency')
-                            ->options([
-                                'USD' => 'USD',
-                                'ZWG' => 'ZWG',
-                                'ZAR' => 'ZAR',
-                            ])
-                            ->default('USD'),
-                        Forms\Components\Placeholder::make('_empty')
-                            ->hiddenLabel(),
-                    ])
-                    ->columns(3),
-                Schemas\Components\Section::make('Dates')
-                    ->schema([
-                        Forms\Components\DatePicker::make('start_date')
-                            ->required(),
-                        Forms\Components\DatePicker::make('next_billing_date')
-                            ->nullable(),
-                        Forms\Components\Placeholder::make('_empty2')
-                            ->hiddenLabel(),
-                    ])
-                    ->columns(3),
+                        Schemas\Components\Section::make('Retainer Details')
+                            ->columnSpan(1)
+                            ->schema([
+                                Forms\Components\TextInput::make('title')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\Select::make('customer_id')
+                                    ->label('Customer')
+                                    ->options(fn () => Customer::query()->currentWorkspace()->orderBy('name')->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->required(),
+                                Forms\Components\Select::make('service_id')
+                                    ->label('Service')
+                                    ->options(fn () => Service::query()->currentWorkspace()->orderBy('name')->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->nullable(),
+                                Forms\Components\Select::make('billing_cycle')
+                                    ->label('Billing Cycle')
+                                    ->options([
+                                        'monthly' => 'Monthly',
+                                        'quarterly' => 'Quarterly',
+                                        'yearly' => 'Yearly',
+                                        'custom' => 'Custom',
+                                    ])
+                                    ->default('monthly'),
+                            ]),
+                        Schemas\Components\Section::make('Pricing & Dates')
+                            ->columnSpan(1)
+                            ->columns(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('amount')
+                                    ->numeric()
+                                    ->prefix('USD')
+                                    ->default(0),
+                                Forms\Components\Select::make('currency')
+                                    ->options([
+                                        'USD' => 'USD',
+                                        'ZWG' => 'ZWG',
+                                        'ZAR' => 'ZAR',
+                                    ])
+                                    ->default('USD'),
+                                Forms\Components\DatePicker::make('start_date')
+                                    ->required(),
+                                Forms\Components\DatePicker::make('next_billing_date')
+                                    ->label('Next Billing Date')
+                                    ->nullable(),
+                            ]),
+                    ]),
                 Schemas\Components\Section::make('Status & Notes')
                     ->schema([
                         Forms\Components\Select::make('status')
@@ -84,6 +87,7 @@ class RetainerResource extends Resource
                             ])
                             ->default('active'),
                         Forms\Components\Textarea::make('notes')
+                            ->rows(3)
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -95,7 +99,8 @@ class RetainerResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn (Retainer $record): string => RetainerResource::getUrl('edit', ['record' => $record])),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
                     ->sortable(),
@@ -144,8 +149,8 @@ class RetainerResource extends Resource
                     ]),
             ])
             ->actions([
+                Actions\EditAction::make(),
                 Actions\ActionGroup::make([
-                    Actions\EditAction::make(),
                     Actions\DeleteAction::make(),
                 ]),
             ])

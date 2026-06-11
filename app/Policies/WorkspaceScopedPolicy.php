@@ -53,14 +53,16 @@ abstract class WorkspaceScopedPolicy
 
     protected function userCanAccessRecord(User $user, Model $record): bool
     {
-        if (! property_exists($record, 'workspace_id')) {
-            return false;
-        }
-
         if ($user->isPlatformAdmin()) {
             return true;
         }
 
-        return $user->workspaces()->where('workspace_id', $record->workspace_id)->exists();
+        $workspaceId = $record->getAttribute('workspace_id');
+
+        if ($workspaceId === null) {
+            return false;
+        }
+
+        return $user->workspaces()->where('workspace_id', $workspaceId)->exists();
     }
 }

@@ -2,8 +2,12 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\AccountSettings;
+use App\Filament\Pages\ChangePassword;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\JoseAssistant;
+use App\Filament\Pages\Profile as ProfilePage;
+use App\Filament\Pages\WorkspaceSettings;
 use App\Filament\Pages\WorkspaceSwitcher;
 use App\Http\Middleware\EnsureActiveWorkspaceIsValid;
 use App\Filament\Resources\ActivityLogResource;
@@ -18,13 +22,13 @@ use App\Filament\Resources\TaskResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Illuminate\Support\HtmlString;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -41,14 +45,16 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
-            ->login()
+            ->login(\App\Filament\Auth\Login::class)
             ->passwordReset()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => '#C9A84C',
             ])
             ->font('Manrope')
             ->brandName('NiaOS')
-            ->favicon(asset('favicon.ico'))
+            ->brandLogo(new HtmlString(view('components.niaos-brand-logo')->render()))
+            ->brandLogoHeight('2rem')
+            ->favicon(asset('icon.png'))
             ->viteTheme('resources/css/app.css')
             ->resources([
                 CustomerResource::class,
@@ -63,6 +69,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->pages([
                 Dashboard::class,
+                ProfilePage::class,
+                AccountSettings::class,
+                ChangePassword::class,
+                WorkspaceSettings::class,
                 WorkspaceSwitcher::class,
                 JoseAssistant::class,
             ])
@@ -110,6 +120,22 @@ class AdminPanelProvider extends PanelProvider
                 return $builder->groups($groups);
             })
             ->userMenuItems([
+                MenuItem::make()
+                    ->label('My Profile')
+                    ->icon('heroicon-o-user-circle')
+                    ->url(fn () => ProfilePage::getUrl()),
+                MenuItem::make()
+                    ->label('Account Settings')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->url(fn () => AccountSettings::getUrl()),
+                MenuItem::make()
+                    ->label('Change Password')
+                    ->icon('heroicon-o-lock-closed')
+                    ->url(fn () => ChangePassword::getUrl()),
+                MenuItem::make()
+                    ->label('Workspace Settings')
+                    ->icon('heroicon-o-building-office')
+                    ->url(fn () => WorkspaceSettings::getUrl()),
                 MenuItem::make()
                     ->label('Switch Workspace')
                     ->icon('heroicon-o-arrow-right-start-on-rectangle')

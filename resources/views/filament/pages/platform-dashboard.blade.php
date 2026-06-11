@@ -106,7 +106,7 @@
                         @endforeach
                     </div>
                 @else
-                    <p class="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">No workspaces created yet.</p>
+                    <p class="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">No workspaces yet. Start by creating your first workspace.</p>
                 @endif
             </div>
 
@@ -134,7 +134,7 @@
                         @endforeach
                     </div>
                 @else
-                    <p class="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">No users registered yet.</p>
+                    <p class="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">No users registered yet. Invite users to get started.</p>
                 @endif
             </div>
         </div>

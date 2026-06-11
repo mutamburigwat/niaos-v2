@@ -1,0 +1,142 @@
+<style>
+    .login-page {
+        min-height: 100vh;
+        background-image: url('{{ asset('login.png') }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        position: relative;
+    }
+
+    .login-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+    }
+
+    .login-card-outer {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 440px;
+    }
+
+    .login-card {
+        background: rgba(10, 10, 12, 0.50);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(201, 168, 76, 0.2);
+        border-radius: 1rem;
+        padding: 2.5rem;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    .login-logo {
+        display: block;
+        text-align: center;
+    }
+
+    .login-logo img {
+        height: 2rem;
+        width: auto;
+        object-fit: contain;
+        margin: 0 auto;
+    }
+
+    .login-heading {
+        font-size: 1.35rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: #C9A84C;
+        margin-top: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .login-subheading {
+        font-size: 0.85rem;
+        letter-spacing: 0.04em;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.55);
+        margin-bottom: 1.5rem;
+    }
+
+    .login-card .fi-fo-field .fi-input-wrp {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .login-card .fi-fo-field .fi-input-wrp:focus-within {
+        border-color: rgba(201, 168, 76, 0.5) !important;
+        box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.15) !important;
+    }
+
+    .login-card .fi-fo-field .fi-input {
+        color: #fff !important;
+    }
+
+    .login-card .fi-fo-field .fi-input::placeholder {
+        color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .login-card .fi-fo-field label,
+    .login-card .fi-fo-field .fi-label {
+        color: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    .login-card .fi-fo-field .fi-checkbox-label {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .login-card .fi-btn {
+        background: #C9A84C !important;
+        color: #0a0a12 !important;
+        font-weight: 600 !important;
+    }
+
+    .login-card .fi-btn:hover {
+        background: #b8953a !important;
+    }
+
+    .login-card .fi-btn:focus {
+        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.3) !important;
+    }
+
+    .login-card a,
+    .login-card .fi-link {
+        color: #C9A84C !important;
+    }
+
+    .login-card a:hover {
+        color: #d4b95c !important;
+    }
+
+    @media (max-width: 480px) {
+        .login-page {
+            padding: 1rem;
+        }
+        .login-card {
+            padding: 1.75rem 1.25rem;
+        }
+    }
+</style>
+
+<div class="login-page">
+    <div class="login-overlay"></div>
+    <div class="login-card-outer">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="{{ asset('dark_wordmark.png') }}" alt="NiaOS" />
+            </div>
+
+            <div class="login-heading">{{ $this->getHeading() }}</div>
+            <div class="login-subheading">{{ $this->getSubheading() }}</div>
+
+            {{ $this->content }}
+        </div>
+    </div>
+</div>

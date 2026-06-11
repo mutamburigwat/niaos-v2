@@ -9,3 +9,123 @@
 @source '../**/*.vue';
 
 @variant dark (&:where(.dark, .dark *));
+
+:root {
+    --niaos-gold: #C9A84C;
+    --niaos-gold-600: #b8953a;
+    --niaos-dark: #0a0a12;
+}
+
+.fi-logo {
+    object-fit: contain !important;
+    width: auto !important;
+}
+
+.fi-simple-layout .fi-logo > img:first-child {
+    display: block !important;
+}
+
+.fi-simple-layout .fi-logo > img:last-child {
+    display: none !important;
+}
+
+.fi-simple-layout {
+    background: linear-gradient(135deg, #0a0a12 0%, #14142e 50%, #0a0a12 100%) !important;
+    min-height: 100vh;
+}
+
+.fi-simple-main {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(201, 168, 76, 0.15) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+    padding: 2.5rem !important;
+}
+
+.fi-simple-header-heading {
+    color: var(--niaos-gold) !important;
+    font-size: 1.35rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+    margin-top: 1rem;
+}
+
+.fi-simple-header-subheading {
+    color: rgba(255, 255, 255, 0.55) !important;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.04em;
+    margin-top: 0.35rem;
+}
+
+.fi-simple-header .fi-logo {
+    margin: 0 auto;
+}
+
+.fi-simple-layout .fi-fo-field .fi-input-wrp {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.fi-simple-layout .fi-fo-field .fi-input-wrp:focus-within {
+    border-color: rgba(201, 168, 76, 0.5) !important;
+    box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.15) !important;
+}
+
+.fi-simple-layout .fi-fo-field .fi-input {
+    color: #fff !important;
+}
+
+.fi-simple-layout .fi-fo-field .fi-input::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.fi-simple-layout .fi-fo-field label,
+.fi-simple-layout .fi-fo-field .fi-label {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.fi-simple-layout .fi-fo-field .fi-checkbox-label {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.fi-simple-layout .fi-btn {
+    background: var(--niaos-gold) !important;
+    color: #0a0a12 !important;
+    font-weight: 600 !important;
+}
+
+.fi-simple-layout .fi-btn:hover {
+    background: var(--niaos-gold-600) !important;
+}
+
+.fi-simple-layout .fi-btn:focus {
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.3) !important;
+}
+
+.fi-simple-layout a,
+.fi-simple-layout .fi-link {
+    color: var(--niaos-gold) !important;
+}
+
+.fi-simple-layout a:hover {
+    color: #d4b95c !important;
+}
+
+.fi-sidebar {
+    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark .fi-sidebar {
+    background: #0e0e18 !important;
+}
+
+.fi-sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding-bottom: 0.75rem !important;
+}
+
+.fi-topbar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
