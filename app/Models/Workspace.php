@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Enums\BillingStatus;
 use App\Enums\Plan;
+use App\Enums\WorkspaceRole;
 use App\Enums\WorkspaceStatus;
 use App\Enums\WorkspaceType;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Workspace extends Model
 {
@@ -47,6 +49,11 @@ class Workspace extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function ownerMember(): HasOne
+    {
+        return $this->hasOne(WorkspaceMember::class)->where('role', WorkspaceRole::Owner);
     }
 
     public function members(): HasMany

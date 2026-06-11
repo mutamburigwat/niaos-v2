@@ -4,11 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Enums\BillingStatus;
 use App\Enums\Plan;
-use App\Enums\WorkspaceRole;
 use App\Enums\WorkspaceStatus;
 use App\Enums\WorkspaceType;
 use App\Filament\Resources\WorkspaceResource\Pages;
 use App\Filament\Resources\WorkspaceResource\RelationManagers\MembersRelationManager;
+use App\Models\User;
 use App\Models\Workspace;
 use Filament\Forms;
 use Filament\Actions;
@@ -19,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class WorkspaceResource extends Resource
 {
@@ -95,30 +96,36 @@ class WorkspaceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('business_name')
+                    ->label('Business')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('workspace_type')
+                    ->label('Workspace Type')
                     ->badge()
-                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                    ->color(fn (WorkspaceType | string $state): string => match ($state?->value ?? $state) {
                         'internal' => 'info',
                         'paid_client' => 'success',
                         'demo' => 'warning',
                         'partner' => 'primary',
                         default => 'gray',
-                    }),
+                    })
+                    ->formatStateUsing(fn (WorkspaceType | string $state): string => ucfirst(str_replace('_', ' ', $state?->value ?? $state))),
                 Tables\Columns\TextColumn::make('plan')
+                    ->label('Plan')
                     ->badge()
-                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                    ->color(fn (Plan | string $state): string => match ($state?->value ?? $state) {
                         'free_internal' => 'info',
                         'starter' => 'gray',
                         'growth' => 'warning',
                         'business' => 'success',
                         'custom' => 'info',
                         default => 'gray',
-                    }),
+                    })
+                    ->formatStateUsing(fn (Plan | string $state): string => ucfirst(str_replace('_', ' ', $state?->value ?? $state))),
                 Tables\Columns\TextColumn::make('billing_status')
+                    ->label('Billing')
                     ->badge()
-                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                    ->color(fn (BillingStatus | string $state): string => match ($state?->value ?? $state) {
                         'free' => 'gray',
                         'trial' => 'info',
                         'active' => 'success',
@@ -126,62 +133,94 @@ class WorkspaceResource extends Resource
                         'suspended' => 'danger',
                         'cancelled' => 'danger',
                         default => 'gray',
-                    }),
+                    })
+                    ->formatStateUsing(fn (BillingStatus | string $state): string => ucfirst($state?->value ?? $state)),
                 Tables\Columns\TextColumn::make('status')
+                    ->label('Access')
                     ->badge()
-                    ->color(fn ($state): string => match ($state?->value ?? $state) {
+                    ->color(fn (WorkspaceStatus | string $state): string => match ($state?->value ?? $state) {
                         'active' => 'success',
                         'suspended' => 'danger',
                         'onboarding' => 'warning',
                         default => 'gray',
-                    }),
+                    })
+                    ->formatStateUsing(fn (WorkspaceStatus | string $state): string => 'Access: ' . ucfirst($state?->value ?? $state)),
+                Tables\Columns\TextColumn::make('ownerMember.user.name')
+                    ->label('Owner')
+                    ->default('—')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('members_count')
-                    ->label('Clients')
+                    ->label('Users')
                     ->counts('members')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('country')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
-            ->modifyQueryUsing(fn (Builder $query) => static::scopeQuery($query))
+            ->modifyQueryUsing(fn (Builder $query) => static::scopeQuery($query)->with('ownerMember.user'))
             ->filters([
                 Tables\Filters\SelectFilter::make('workspace_type')
+                    ->label('Workspace Type')
                     ->options(collect(WorkspaceType::cases())->mapWithKeys(fn ($t) => [$t->value => ucfirst(str_replace('_', ' ', $t->value))])),
                 Tables\Filters\SelectFilter::make('plan')
+                    ->label('Plan')
                     ->options(collect(Plan::cases())->mapWithKeys(fn ($p) => [$p->value => ucfirst(str_replace('_', ' ', $p->value))])),
                 Tables\Filters\SelectFilter::make('billing_status')
-                    ->options(collect(BillingStatus::cases())->mapWithKeys(fn ($b) => [$b->value => ucfirst($b->value)])),
+                    ->label('Billing Status')
+                    ->options(collect(BillingStatus::cases())->mapWithKeys(fn ($b) => [$b->value => 'Billing: ' . ucfirst($b->value)])),
                 Tables\Filters\SelectFilter::make('status')
-                    ->options(collect(WorkspaceStatus::cases())->mapWithKeys(fn ($s) => [$s->value => ucfirst($s->value)])),
+                    ->label('Access Status')
+                    ->options(collect(WorkspaceStatus::cases())->mapWithKeys(fn ($s) => [$s->value => 'Access: ' . ucfirst($s->value)])),
             ])
             ->actions([
-                Actions\EditAction::make(),
-                Actions\Action::make('activate')
-                    ->label('Activate')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn (Workspace $record): bool => $record->status === 'suspended' && Auth::user()?->isPlatformAdmin())
-                    ->action(fn (Workspace $record) => $record->update(['status' => WorkspaceStatus::Active])),
-                Actions\Action::make('suspend')
-                    ->label('Suspend')
-                    ->icon('heroicon-o-minus-circle')
-                    ->color('danger')
-                    ->visible(fn (Workspace $record): bool => ! $record->isInternal() && $record->status !== 'suspended' && Auth::user()?->isPlatformAdmin())
-                    ->action(fn (Workspace $record) => $record->update(['status' => WorkspaceStatus::Suspended])),
-                Actions\DeleteAction::make()
-                    ->visible(fn () => Auth::user()?->isPlatformAdmin()),
-            ])
-            ->bulkActions([
-                Actions\BulkActionGroup::make([
-                    Actions\DeleteBulkAction::make()
-                        ->visible(fn () => Auth::user()?->isPlatformAdmin()),
+                Actions\EditAction::make()
+                    ->label('Open'),
+                Actions\ActionGroup::make([
+                    Actions\Action::make('manage')
+                        ->label('Manage')
+                        ->icon('heroicon-o-cog-6-tooth')
+                        ->url(fn (Workspace $record): string => WorkspaceResource::getUrl('edit', ['record' => $record])),
+                    Actions\Action::make('members')
+                        ->label('Members')
+                        ->icon('heroicon-o-users')
+                        ->url(fn (Workspace $record): string => WorkspaceResource::getUrl('edit', ['record' => $record])),
+                    Actions\Action::make('reset_owner_password')
+                        ->label('Reset Owner Password')
+                        ->icon('heroicon-o-key')
+                        ->color('warning')
+                        ->form([
+                            Forms\Components\TextInput::make('new_password')
+                                ->label('New Password')
+                                ->password()
+                                ->required()
+                                ->minLength(8),
+                        ])
+                        ->action(function (Workspace $record, array $data) {
+                            $ownerMember = $record->ownerMember;
+                            if ($ownerMember && $ownerMember->user) {
+                                $ownerMember->user->update([
+                                    'password' => Hash::make($data['new_password']),
+                                ]);
+                            }
+                        })
+                        ->visible(fn (Workspace $record): bool => $record->ownerMember !== null),
+                    Actions\Action::make('activate')
+                        ->label('Activate')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->visible(fn (Workspace $record): bool => $record->status === 'suspended' && Auth::user()?->isPlatformAdmin())
+                        ->action(fn (Workspace $record) => $record->update(['status' => WorkspaceStatus::Active])),
+                    Actions\Action::make('suspend')
+                        ->label('Suspend')
+                        ->icon('heroicon-o-minus-circle')
+                        ->color('danger')
+                        ->visible(fn (Workspace $record): bool => ! $record->isInternal() && $record->status !== 'suspended' && Auth::user()?->isPlatformAdmin())
+                        ->action(fn (Workspace $record) => $record->update(['status' => WorkspaceStatus::Suspended])),
                 ]),
-            ]);
+            ])
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array
@@ -195,7 +234,6 @@ class WorkspaceResource extends Resource
     {
         return [
             'index' => Pages\ListWorkspaces::route('/'),
-            'create' => Pages\CreateWorkspace::route('/create'),
             'edit' => Pages\EditWorkspace::route('/{record}/edit'),
         ];
     }
