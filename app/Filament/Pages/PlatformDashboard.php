@@ -49,6 +49,16 @@ class PlatformDashboard extends Page
         return Workspace::onboarding()->count();
     }
 
+    public function getTrialWorkspaces(): int
+    {
+        return Workspace::where('billing_status', 'trial')->count();
+    }
+
+    public function getPaidClients(): int
+    {
+        return Workspace::where('workspace_type', 'paid_client')->count();
+    }
+
     public function getTotalUsers(): int
     {
         return User::count();
@@ -57,20 +67,5 @@ class PlatformDashboard extends Page
     public function getPlatformAdmins(): int
     {
         return User::where('is_platform_admin', true)->count();
-    }
-
-    public function getTotalCustomers(): int
-    {
-        return Customer::count();
-    }
-
-    public function getTotalLeads(): int
-    {
-        return Lead::count();
-    }
-
-    public function getTotalTasks(): int
-    {
-        return Task::count();
     }
 }

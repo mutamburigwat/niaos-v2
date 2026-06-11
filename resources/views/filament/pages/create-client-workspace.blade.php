@@ -1,16 +1,16 @@
 <x-filament-panels::page>
     <div class="space-y-6">
         @if ($created)
-            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                <div class="text-center mb-6">
-                    <div class="mx-auto flex items-center justify-center w-16 h-16 bg-success-50 rounded-full mb-4 dark:bg-success-900/20">
-                        <x-heroicon-o-check-circle class="w-8 h-8 text-success-600 dark:text-success-400" />
+            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+                <div class="mb-6 text-center">
+                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-50 dark:bg-success-900/20">
+                        <x-heroicon-o-check-circle class="h-8 w-8 text-success-600 dark:text-success-400" />
                     </div>
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Client Workspace Created</h2>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">The workspace and owner account have been set up successfully.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">The workspace and owner account have been set up successfully.</p>
                 </div>
 
-                <div class="bg-gray-50 rounded-lg p-4 space-y-3 dark:bg-gray-900/50">
+                <div class="rounded-lg bg-gray-50 p-4 space-y-3 dark:bg-gray-900/50">
                     <div class="flex justify-between">
                         <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Workspace Name</span>
                         <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $summary['workspace_name'] }}</span>
@@ -52,16 +52,18 @@
                 </div>
             </div>
         @else
-            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                <h2 class="text-lg font-heading font-bold text-gray-900 dark:text-white mb-2">New Client Workspace</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">New Client Workspace</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Create a new workspace and owner account in one step. The workspace will be set to active immediately.
                 </p>
+            </div>
 
-                <form wire:submit="create" class="space-y-4">
+            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+                <form wire:submit="create" class="space-y-6">
                     {{ $this->form }}
 
-                    <div class="flex justify-end pt-4">
+                    <div class="flex justify-end border-t border-gray-200 pt-6 dark:border-gray-700">
                         <x-filament::button type="submit" color="primary">
                             Create Workspace
                         </x-filament::button>

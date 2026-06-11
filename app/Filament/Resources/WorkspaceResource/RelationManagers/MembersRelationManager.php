@@ -4,8 +4,10 @@ namespace App\Filament\Resources\WorkspaceResource\RelationManagers;
 
 use App\Enums\WorkspaceRole;
 use App\Models\User;
+use App\Services\PlanEntitlement;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -67,6 +69,17 @@ class MembersRelationManager extends RelationManager
             ])
             ->headerActions([
                 Actions\CreateAction::make()
+                    ->before(function () {
+                        $workspace = $this->getOwnerRecord();
+                        if (! PlanEntitlement::canAddUser($workspace)) {
+                            Notification::make()
+                                ->danger()
+                                ->title('User limit reached')
+                                ->body('This workspace has reached its user limit. Upgrade the plan to add more users.')
+                                ->send();
+                            $this->halt();
+                        }
+                    })
                     ->visible(fn () => Auth::user()?->isPlatformAdmin()),
             ])
             ->actions([

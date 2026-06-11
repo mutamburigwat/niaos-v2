@@ -86,22 +86,24 @@ class UserResource extends Resource
             ])
             ->actions([
                 Actions\EditAction::make(),
-                Actions\Action::make('reset_password')
-                    ->label('Reset Password')
-                    ->icon('heroicon-o-key')
-                    ->color('warning')
-                    ->form([
-                        Forms\Components\TextInput::make('new_password')
-                            ->label('New Password')
-                            ->password()
-                            ->required()
-                            ->minLength(8),
-                    ])
-                    ->action(function (User $record, array $data) {
-                        $record->update(['password' => Hash::make($data['new_password'])]);
-                    }),
-                Actions\DeleteAction::make()
-                    ->visible(fn (User $record): bool => Auth::user()?->isPlatformAdmin() && Auth::id() !== $record->id),
+                Actions\ActionGroup::make([
+                    Actions\Action::make('reset_password')
+                        ->label('Reset Password')
+                        ->icon('heroicon-o-key')
+                        ->color('warning')
+                        ->form([
+                            Forms\Components\TextInput::make('new_password')
+                                ->label('New Password')
+                                ->password()
+                                ->required()
+                                ->minLength(8),
+                        ])
+                        ->action(function (User $record, array $data) {
+                            $record->update(['password' => Hash::make($data['new_password'])]);
+                        }),
+                    Actions\DeleteAction::make()
+                        ->visible(fn (User $record): bool => Auth::user()?->isPlatformAdmin() && Auth::id() !== $record->id),
+                ]),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([

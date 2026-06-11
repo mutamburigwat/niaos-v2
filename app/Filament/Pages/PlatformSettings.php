@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
@@ -50,31 +51,48 @@ class PlatformSettings extends Page
     {
         return $schema
             ->schema([
-                TextInput::make('platform_name')
-                    ->label('Platform Name')
-                    ->required()
-                    ->maxLength(255),
-                Select::make('default_paid_client_plan')
-                    ->label('Default Plan for New Paid Clients')
-                    ->options(fn () => Plan::active()->ordered()->pluck('name', 'key'))
-                    ->required(),
-                Select::make('default_paid_client_billing_status')
-                    ->label('Default Billing Status for New Paid Clients')
-                    ->options([
-                        'trial' => 'Trial',
-                        'active' => 'Active',
-                        'overdue' => 'Overdue',
-                        'suspended' => 'Suspended',
-                        'cancelled' => 'Cancelled',
-                        'free' => 'Free',
-                    ])
-                    ->required(),
-                TextInput::make('support_contact')
-                    ->label('Support Contact')
-                    ->maxLength(255),
-                Textarea::make('system_notes')
-                    ->label('System Notes')
-                    ->columnSpanFull(),
+                Section::make('General')
+                    ->description('Platform-wide identity and display settings.')
+                    ->schema([
+                        TextInput::make('platform_name')
+                            ->label('Platform Name')
+                            ->required()
+                            ->maxLength(255),
+                    ]),
+                Section::make('Defaults')
+                    ->description('Default values applied when onboarding new client workspaces.')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('default_paid_client_plan')
+                            ->label('Default Plan')
+                            ->options(fn () => Plan::active()->ordered()->pluck('name', 'key'))
+                            ->required(),
+                        Select::make('default_paid_client_billing_status')
+                            ->label('Default Billing Status')
+                            ->options([
+                                'trial' => 'Trial',
+                                'active' => 'Active',
+                                'overdue' => 'Overdue',
+                                'suspended' => 'Suspended',
+                                'cancelled' => 'Cancelled',
+                                'free' => 'Free',
+                            ])
+                            ->required(),
+                    ]),
+                Section::make('Support')
+                    ->description('Contact information displayed to workspace users.')
+                    ->schema([
+                        TextInput::make('support_contact')
+                            ->label('Support Contact')
+                            ->maxLength(255),
+                    ]),
+                Section::make('Notes')
+                    ->description('Internal notes visible only to platform administrators.')
+                    ->schema([
+                        Textarea::make('system_notes')
+                            ->label('System Notes')
+                            ->rows(4),
+                    ]),
             ]);
     }
 

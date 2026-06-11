@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Plan;
 use App\Models\PlatformSetting;
 use App\Services\WorkspaceProvisioningService;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
@@ -49,52 +50,62 @@ class CreateClientWorkspace extends Page
     {
         return $schema
             ->schema([
-                TextInput::make('business_name')
-                    ->label('Business / Workspace Name')
-                    ->required()
-                    ->maxLength(255),
-                Select::make('workspace_type')
-                    ->label('Workspace Type')
-                    ->options([
-                        'paid_client' => 'Paid Client',
-                        'demo' => 'Demo',
-                        'partner' => 'Partner',
-                        'internal' => 'Internal',
-                    ])
-                    ->default('paid_client')
-                    ->required(),
-                Select::make('plan')
-                    ->label('Plan')
-                    ->options(fn () => Plan::active()->ordered()->pluck('name', 'key'))
-                    ->default(fn () => PlatformSetting::getValue('default_paid_client_plan', 'starter'))
-                    ->required(),
-                Select::make('billing_status')
-                    ->label('Billing Status')
-                    ->options([
-                        'trial' => 'Trial',
-                        'active' => 'Active',
-                        'overdue' => 'Overdue',
-                        'suspended' => 'Suspended',
-                        'cancelled' => 'Cancelled',
-                        'free' => 'Free',
-                    ])
-                    ->default(fn () => PlatformSetting::getValue('default_paid_client_billing_status', 'trial'))
-                    ->required(),
-                TextInput::make('owner_name')
-                    ->label('Owner Name')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('owner_email')
-                    ->label('Owner Email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255)
-                    ->unique('users', 'email', ignoreRecord: true),
-                TextInput::make('owner_password')
-                    ->label('Temporary Password')
-                    ->password()
-                    ->required()
-                    ->minLength(8),
+                Section::make('Workspace Details')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('business_name')
+                            ->label('Business / Workspace Name')
+                            ->required()
+                            ->maxLength(255),
+                        Select::make('workspace_type')
+                            ->label('Workspace Type')
+                            ->options([
+                                'paid_client' => 'Paid Client',
+                                'demo' => 'Demo',
+                                'partner' => 'Partner',
+                                'internal' => 'Internal',
+                            ])
+                            ->default('paid_client')
+                            ->required(),
+                        Select::make('plan')
+                            ->label('Plan')
+                            ->options(fn () => Plan::active()->ordered()->pluck('name', 'key'))
+                            ->default(fn () => PlatformSetting::getValue('default_paid_client_plan', 'starter'))
+                            ->required(),
+                        Select::make('billing_status')
+                            ->label('Billing Status')
+                            ->options([
+                                'trial' => 'Trial',
+                                'active' => 'Active',
+                                'overdue' => 'Overdue',
+                                'suspended' => 'Suspended',
+                                'cancelled' => 'Cancelled',
+                                'free' => 'Free',
+                            ])
+                            ->default(fn () => PlatformSetting::getValue('default_paid_client_billing_status', 'trial'))
+                            ->required(),
+                    ]),
+                Section::make('Owner Account')
+                    ->description('The workspace owner will receive login credentials for this account.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('owner_name')
+                            ->label('Owner Name')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('owner_email')
+                            ->label('Owner Email')
+                            ->email()
+                            ->required()
+                            ->maxLength(255)
+                            ->unique('users', 'email', ignoreRecord: true),
+                        TextInput::make('owner_password')
+                            ->label('Temporary Password')
+                            ->password()
+                            ->required()
+                            ->minLength(8)
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 

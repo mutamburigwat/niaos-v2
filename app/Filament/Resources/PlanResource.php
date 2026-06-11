@@ -11,6 +11,7 @@ use Filament\Schemas;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class PlanResource extends Resource
@@ -22,7 +23,9 @@ class PlanResource extends Resource
     {
         return $schema
             ->schema([
-                Schemas\Components\Section::make('Plan Details')
+                Schemas\Components\Section::make('Plan Identity')
+                    ->description('Basic information that identifies this plan.')
+                    ->columns(2)
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
@@ -31,12 +34,14 @@ class PlanResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
-                            ->helperText('Unique identifier like "starter", "growth", "business".'),
+                            ->helperText('Unique key like "starter", "growth", "business".'),
                         Forms\Components\Textarea::make('description')
                             ->maxLength(65535)
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ]),
                 Schemas\Components\Section::make('Pricing')
+                    ->description('Monetary configuration for this plan.')
+                    ->columns(3)
                     ->schema([
                         Forms\Components\TextInput::make('price_amount')
                             ->label('Price')
@@ -59,8 +64,10 @@ class PlanResource extends Resource
                             ])
                             ->default('none')
                             ->required(),
-                    ])->columns(3),
-                Schemas\Components\Section::make('Status & Order')
+                    ]),
+                Schemas\Components\Section::make('Availability')
+                    ->description('Control whether this plan is available and how it is ordered.')
+                    ->columns(2)
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label('Active')
@@ -70,12 +77,17 @@ class PlanResource extends Resource
                             ->numeric()
                             ->default(0)
                             ->required(),
-                    ])->columns(2),
-                Schemas\Components\Section::make('Features & Limits')
+                    ]),
+                Schemas\Components\Section::make('Features')
+                    ->description('Key-value pairs describing what this plan includes. The key is the module identifier.')
                     ->schema([
                         Forms\Components\KeyValue::make('features')
                             ->label('Features')
                             ->columnSpanFull(),
+                    ]),
+                Schemas\Components\Section::make('Limits')
+                    ->description('Set numeric caps per resource. Use -1 for unlimited, 0 to disable.')
+                    ->schema([
                         Forms\Components\KeyValue::make('limits')
                             ->label('Limits')
                             ->columnSpanFull(),
@@ -102,6 +114,7 @@ class PlanResource extends Resource
                     ->money('USD')
                     ->default('Free'),
                 Tables\Columns\TextColumn::make('billing_interval')
+                    ->label('Interval')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'none' => 'gray',
@@ -109,12 +122,21 @@ class PlanResource extends Resource
                         'yearly' => 'info',
                         'custom' => 'warning',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'none' => 'Free',
+                        'monthly' => 'Monthly',
+                        'yearly' => 'Yearly',
+                        'custom' => 'Custom',
+                        default => $state,
                     }),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean()
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive'),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -122,11 +144,13 @@ class PlanResource extends Resource
             ->defaultSort('sort_order')
             ->actions([
                 Actions\EditAction::make(),
-                Actions\Action::make('toggle_active')
-                    ->label(fn (Plan $record): string => $record->is_active ? 'Disable' : 'Enable')
-                    ->icon(fn (Plan $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                    ->color(fn (Plan $record): string => $record->is_active ? 'danger' : 'success')
-                    ->action(fn (Plan $record) => $record->update(['is_active' => ! $record->is_active])),
+                Actions\ActionGroup::make([
+                    Actions\Action::make('toggle_active')
+                        ->label(fn (Plan $record): string => $record->is_active ? 'Deactivate' : 'Activate')
+                        ->icon(fn (Plan $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                        ->color(fn (Plan $record): string => $record->is_active ? 'danger' : 'success')
+                        ->action(fn (Plan $record) => $record->update(['is_active' => ! $record->is_active])),
+                ]),
             ])
             ->bulkActions([]);
     }

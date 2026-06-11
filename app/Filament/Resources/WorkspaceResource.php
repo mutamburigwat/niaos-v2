@@ -30,6 +30,12 @@ class WorkspaceResource extends Resource
     {
         return $schema
             ->schema([
+                Schemas\Components\Section::make('Plan Overview')
+                    ->schema([
+                        Forms\Components\View::make('filament.components.plan-summary')
+                            ->viewData(fn ($record) => ['workspace' => $record]),
+                    ])
+                    ->visible(fn ($record) => $record !== null),
                 Schemas\Components\Section::make('Business Information')
                     ->schema([
                         Forms\Components\TextInput::make('business_name')
@@ -136,7 +142,7 @@ class WorkspaceResource extends Resource
                     })
                     ->formatStateUsing(fn (BillingStatus | string $state): string => ucfirst($state?->value ?? $state)),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Access')
+                    ->label('Status')
                     ->badge()
                     ->color(fn (WorkspaceStatus | string $state): string => match ($state?->value ?? $state) {
                         'active' => 'success',
@@ -144,7 +150,7 @@ class WorkspaceResource extends Resource
                         'onboarding' => 'warning',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (WorkspaceStatus | string $state): string => 'Access: ' . ucfirst($state?->value ?? $state)),
+                    ->formatStateUsing(fn (WorkspaceStatus | string $state): string => ucfirst($state?->value ?? $state)),
                 Tables\Columns\TextColumn::make('ownerMember.user.name')
                     ->label('Owner')
                     ->default('—')
@@ -169,25 +175,17 @@ class WorkspaceResource extends Resource
                     ->options(collect(Plan::cases())->mapWithKeys(fn ($p) => [$p->value => ucfirst(str_replace('_', ' ', $p->value))])),
                 Tables\Filters\SelectFilter::make('billing_status')
                     ->label('Billing Status')
-                    ->options(collect(BillingStatus::cases())->mapWithKeys(fn ($b) => [$b->value => 'Billing: ' . ucfirst($b->value)])),
+                    ->options(collect(BillingStatus::cases())->mapWithKeys(fn ($b) => [$b->value => ucfirst($b->value)])),
                 Tables\Filters\SelectFilter::make('status')
-                    ->label('Access Status')
-                    ->options(collect(WorkspaceStatus::cases())->mapWithKeys(fn ($s) => [$s->value => 'Access: ' . ucfirst($s->value)])),
+                    ->label('Status')
+                    ->options(collect(WorkspaceStatus::cases())->mapWithKeys(fn ($s) => [$s->value => ucfirst($s->value)])),
             ])
             ->actions([
                 Actions\EditAction::make()
                     ->label('Open'),
                 Actions\ActionGroup::make([
-                    Actions\Action::make('manage')
-                        ->label('Manage')
-                        ->icon('heroicon-o-cog-6-tooth')
-                        ->url(fn (Workspace $record): string => WorkspaceResource::getUrl('edit', ['record' => $record])),
-                    Actions\Action::make('members')
-                        ->label('Members')
-                        ->icon('heroicon-o-users')
-                        ->url(fn (Workspace $record): string => WorkspaceResource::getUrl('edit', ['record' => $record])),
                     Actions\Action::make('reset_owner_password')
-                        ->label('Reset Owner Password')
+                        ->label('Reset Password')
                         ->icon('heroicon-o-key')
                         ->color('warning')
                         ->form([

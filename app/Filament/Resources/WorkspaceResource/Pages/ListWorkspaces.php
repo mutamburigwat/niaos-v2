@@ -27,20 +27,30 @@ class ListWorkspaces extends ListRecords
         return 'Manage client, internal, demo and partner workspaces across NiaOS.';
     }
 
+    public function getEmptyStateHeading(): string
+    {
+        return 'No workspaces yet';
+    }
+
+    public function getEmptyStateDescription(): ?string
+    {
+        return 'Create your first workspace to get started with NiaOS.';
+    }
+
     public function getTabs(): array
     {
         return [
             'all' => Tab::make('All'),
             'paid_clients' => Tab::make('Paid Clients')
-                ->modifyQuery(fn (Builder $query) => $query->where('workspace_type', WorkspaceType::PaidClient)),
+                ->query(fn (Builder $query) => $query->where('workspace_type', WorkspaceType::PaidClient)),
             'trials' => Tab::make('Trials')
-                ->modifyQuery(fn (Builder $query) => $query->where('billing_status', BillingStatus::Trial)),
+                ->query(fn (Builder $query) => $query->where('billing_status', BillingStatus::Trial)),
             'active' => Tab::make('Active')
-                ->modifyQuery(fn (Builder $query) => $query->where('status', WorkspaceStatus::Active)),
+                ->query(fn (Builder $query) => $query->where('status', WorkspaceStatus::Active)),
             'suspended' => Tab::make('Suspended')
-                ->modifyQuery(fn (Builder $query) => $query->where('status', WorkspaceStatus::Suspended)),
+                ->query(fn (Builder $query) => $query->where('status', WorkspaceStatus::Suspended)),
             'internal' => Tab::make('Internal')
-                ->modifyQuery(fn (Builder $query) => $query->where('workspace_type', WorkspaceType::Internal)),
+                ->query(fn (Builder $query) => $query->where('workspace_type', WorkspaceType::Internal)),
         ];
     }
 
