@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
+            PlansAndPlatformSettingsSeeder::class,
         ]);
 
         if (\App\Models\User::where('email', 'admin@niaos.co.zw')->doesntExist()) {

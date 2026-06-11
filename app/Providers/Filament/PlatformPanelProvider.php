@@ -4,8 +4,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\CreateClientWorkspace;
 use App\Filament\Pages\PlatformDashboard;
-use App\Filament\Pages\PlatformPlans;
 use App\Filament\Pages\PlatformSettings;
+use App\Filament\Resources\PlanResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Resources\WorkspaceResource;
 use App\Http\Middleware\EnsurePlatformAdmin;
@@ -45,11 +45,11 @@ class PlatformPanelProvider extends PanelProvider
             ->resources([
                 WorkspaceResource::class,
                 UserResource::class,
+                PlanResource::class,
             ])
             ->pages([
                 PlatformDashboard::class,
                 CreateClientWorkspace::class,
-                PlatformPlans::class,
                 PlatformSettings::class,
             ])
             ->homeUrl(fn (): string => PlatformDashboard::getUrl())
@@ -71,8 +71,8 @@ class PlatformPanelProvider extends PanelProvider
                                 ->isActiveWhen(fn () => request()->routeIs('filament.platform.resources.users.*')),
                             NavigationItem::make('Plans')
                                 ->icon('heroicon-o-currency-dollar')
-                                ->url(fn () => PlatformPlans::getUrl())
-                                ->isActiveWhen(fn () => request()->routeIs('filament.platform.pages.plans')),
+                                ->url(fn () => PlanResource::getUrl())
+                                ->isActiveWhen(fn () => request()->routeIs('filament.platform.resources.plans.*')),
                             NavigationItem::make('Settings')
                                 ->icon('heroicon-o-cog-6-tooth')
                                 ->url(fn () => PlatformSettings::getUrl())

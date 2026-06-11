@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Plan;
+use App\Models\PlatformSetting;
 use App\Services\WorkspaceProvisioningService;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -18,8 +20,8 @@ class CreateClientWorkspace extends Page
 
     public ?string $business_name = null;
     public ?string $workspace_type = 'paid_client';
-    public ?string $plan = 'starter';
-    public ?string $billing_status = 'trial';
+    public ?string $plan = null;
+    public ?string $billing_status = null;
     public ?string $owner_name = null;
     public ?string $owner_email = null;
     public ?string $owner_password = null;
@@ -35,6 +37,12 @@ class CreateClientWorkspace extends Page
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    public function mount(): void
+    {
+        $this->plan = PlatformSetting::getValue('default_paid_client_plan', 'starter');
+        $this->billing_status = PlatformSetting::getValue('default_paid_client_billing_status', 'trial');
     }
 
     public function form(Schema $schema): Schema
@@ -57,13 +65,8 @@ class CreateClientWorkspace extends Page
                     ->required(),
                 Select::make('plan')
                     ->label('Plan')
-                    ->options([
-                        'starter' => 'Starter',
-                        'growth' => 'Growth',
-                        'business' => 'Business',
-                        'custom' => 'Custom',
-                    ])
-                    ->default('starter')
+                    ->options(fn () => Plan::active()->ordered()->pluck('name', 'key'))
+                    ->default(fn () => PlatformSetting::getValue('default_paid_client_plan', 'starter'))
                     ->required(),
                 Select::make('billing_status')
                     ->label('Billing Status')
@@ -75,7 +78,7 @@ class CreateClientWorkspace extends Page
                         'cancelled' => 'Cancelled',
                         'free' => 'Free',
                     ])
-                    ->default('trial')
+                    ->default(fn () => PlatformSetting::getValue('default_paid_client_billing_status', 'trial'))
                     ->required(),
                 TextInput::make('owner_name')
                     ->label('Owner Name')
@@ -120,7 +123,7 @@ class CreateClientWorkspace extends Page
             'created', 'summary',
         ]);
         $this->workspace_type = 'paid_client';
-        $this->plan = 'starter';
-        $this->billing_status = 'trial';
+        $this->plan = PlatformSetting::getValue('default_paid_client_plan', 'starter');
+        $this->billing_status = PlatformSetting::getValue('default_paid_client_billing_status', 'trial');
     }
 }
