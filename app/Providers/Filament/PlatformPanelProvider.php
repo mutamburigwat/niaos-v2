@@ -37,7 +37,7 @@ class PlatformPanelProvider extends PanelProvider
         return $panel
             ->id('platform')
             ->path('platform')
-            ->login()
+            ->login(\App\Filament\Auth\Login::class)
             ->passwordReset()
             ->colors([
                 'primary' => '#C9A84C',

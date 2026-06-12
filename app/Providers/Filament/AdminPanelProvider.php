@@ -47,7 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
-            ->login()
+            ->login(\App\Filament\Auth\Login::class)
             ->passwordReset()
             ->colors([
                 'primary' => '#C9A84C',
