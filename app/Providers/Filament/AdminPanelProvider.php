@@ -11,9 +11,11 @@ use App\Filament\Pages\WorkspaceSettings;
 use App\Filament\Pages\WorkspaceSwitcher;
 use App\Http\Middleware\EnsureActiveWorkspaceIsValid;
 use App\Filament\Resources\ActivityLogResource;
+use App\Filament\Resources\BillingRecordResource;
 use App\Filament\Resources\CustomerResource;
 use App\Filament\Resources\FileRecordResource;
 use App\Filament\Resources\LeadResource;
+use App\Filament\Resources\PaymentResource;
 use App\Filament\Resources\QuotationResource;
 use App\Filament\Resources\RetainerResource;
 use App\Filament\Resources\ServiceResource;
@@ -45,7 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
-            ->login(\App\Filament\Auth\Login::class)
+            ->login()
             ->passwordReset()
             ->colors([
                 'primary' => '#C9A84C',
@@ -62,6 +64,8 @@ class AdminPanelProvider extends PanelProvider
                 TaskResource::class,
                 QuotationResource::class,
                 RetainerResource::class,
+                BillingRecordResource::class,
+                PaymentResource::class,
                 SupportRequestResource::class,
                 ServiceResource::class,
                 FileRecordResource::class,
@@ -107,6 +111,12 @@ class AdminPanelProvider extends PanelProvider
                         ...ServiceResourceNavigation(),
                         ...FileRecordResourceNavigation(),
                         ...ActivityLogResourceNavigation(),
+                    ]);
+
+                $groups[] = NavigationGroup::make('Finance')
+                    ->items([
+                        ...BillingRecordResourceNavigation(),
+                        ...PaymentResourceNavigation(),
                     ]);
 
                 $groups[] = NavigationGroup::make('AI')
@@ -246,5 +256,25 @@ function ServiceResourceNavigation(): array
             ->icon('heroicon-o-wrench')
             ->url(fn () => \App\Filament\Resources\ServiceResource::getUrl())
             ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.services.*')),
+    ];
+}
+
+function BillingRecordResourceNavigation(): array
+{
+    return [
+        NavigationItem::make('Billing Records')
+            ->icon('heroicon-o-document-currency-dollar')
+            ->url(fn () => \App\Filament\Resources\BillingRecordResource::getUrl())
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.billing-records.*')),
+    ];
+}
+
+function PaymentResourceNavigation(): array
+{
+    return [
+        NavigationItem::make('Payments')
+            ->icon('heroicon-o-currency-dollar')
+            ->url(fn () => \App\Filament\Resources\PaymentResource::getUrl())
+            ->isActiveWhen(fn () => request()->routeIs('filament.app.resources.payments.*')),
     ];
 }

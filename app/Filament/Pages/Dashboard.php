@@ -3,9 +3,11 @@
 namespace App\Filament\Pages;
 
 use App\Models\ActivityLog;
+use App\Models\BillingRecord;
 use App\Models\Customer;
 use App\Models\FileRecord;
 use App\Models\Lead;
+use App\Models\Payment;
 use App\Models\Quotation;
 use App\Models\Retainer;
 use App\Models\Service;
@@ -103,6 +105,35 @@ class Dashboard extends Page
     public function getFileCount(): int
     {
         return FileRecord::query()->currentWorkspace()->count();
+    }
+
+    public function getMonthlyRecurringRevenue(): float
+    {
+        return (float) Retainer::query()->currentWorkspace()
+            ->where('status', 'active')
+            ->sum('amount');
+    }
+
+    public function getOutstandingBalance(): float
+    {
+        return (float) BillingRecord::query()->currentWorkspace()
+            ->whereIn('status', ['issued', 'partially_paid', 'overdue'])
+            ->sum('amount');
+    }
+
+    public function getPaymentsThisMonth(): float
+    {
+        return (float) Payment::query()->currentWorkspace()
+            ->whereMonth('payment_date', now()->month)
+            ->whereYear('payment_date', now()->year)
+            ->sum('amount');
+    }
+
+    public function getOverdueBillingRecordCount(): int
+    {
+        return BillingRecord::query()->currentWorkspace()
+            ->where('status', 'overdue')
+            ->count();
     }
 
     public function getOpenSupportRequests(): \Illuminate\Database\Eloquent\Collection

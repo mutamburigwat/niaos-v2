@@ -20,4 +20,9 @@ class Login extends BaseLogin
     {
         return 'Purpose • Connect • Automate • Intelligence';
     }
+
+    public function hasLogo(): bool
+    {
+        return false;
+    }
 }

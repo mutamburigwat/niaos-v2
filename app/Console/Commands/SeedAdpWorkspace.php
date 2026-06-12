@@ -6,8 +6,10 @@ use App\Enums\BillingStatus;
 use App\Enums\Plan;
 use App\Enums\WorkspaceStatus;
 use App\Enums\WorkspaceType;
+use App\Models\BillingRecord;
 use App\Models\Customer;
 use App\Models\CustomerContact;
+use App\Models\Payment;
 use App\Models\Retainer;
 use App\Models\Service;
 use App\Models\SupportRequest;
@@ -211,6 +213,10 @@ class SeedAdpWorkspace extends Command
         $this->seedContacts($workspace, $customerRecords);
 
         $this->newLine();
+        $this->line('── Seeding Finance Records ─────────────');
+        $this->seedFinance($workspace, $customerRecords);
+
+        $this->newLine();
         $this->line('── Notes ───────────────────────────────');
         $this->outputNotes();
 
@@ -222,6 +228,8 @@ class SeedAdpWorkspace extends Command
         $this->line('  Retainers seeded: 4');
         $this->line('  Tasks seeded: 5');
         $this->line('  Support requests seeded: 3');
+        $this->line('  Billing records seeded: 3');
+        $this->line('  Payments seeded: 1');
         $this->line('  Contacts seeded: 11');
         $this->newLine();
 
@@ -538,12 +546,108 @@ class SeedAdpWorkspace extends Command
             '',
             'Current Debt Tracker Balance: USD 800',
             '',
-            'Note: These figures are reference data only until a Finance module is implemented.',
-            'No financial transactions should be recorded outside the finance module.',
+            'Finance module is active. Billing records and payments are tracked through the Finance section.',
+            'Revenue allocation rule stored as reference:',
         ];
 
         foreach ($notes as $line) {
             $this->line('  ' . $line);
+        }
+    }
+
+    private function seedFinance(Workspace $workspace, array $customers): void
+    {
+        $smilingHearts = $customers['Smiling Hearts Care'] ?? null;
+        $malzCloset = $customers['Malz Closet'] ?? null;
+        $vorxPrints = $customers['Vorx Prints'] ?? null;
+        $lucky = $customers['Lucky'] ?? null;
+
+        if ($smilingHearts) {
+            BillingRecord::updateOrCreate(
+                [
+                    'workspace_id' => $workspace->id,
+                    'customer_id' => $smilingHearts->id,
+                    'title' => 'Digital Presence Setup Balance',
+                ],
+                [
+                    'amount' => 75,
+                    'currency' => 'USD',
+                    'issue_date' => now()->subMonth(),
+                    'status' => 'partially_paid',
+                    'notes' => 'Setup fee 150, 75 received, 75 remaining.',
+                ]
+            );
+            $this->line('  ✓ Billing record: Smiling Hearts Care — $75');
+
+            Payment::updateOrCreate(
+                [
+                    'workspace_id' => $workspace->id,
+                    'customer_id' => $smilingHearts->id,
+                    'reference' => 'Initial setup payment',
+                ],
+                [
+                    'amount' => 75,
+                    'currency' => 'USD',
+                    'payment_date' => now()->subMonth(),
+                    'payment_method' => 'cash',
+                    'notes' => 'Initial payment received toward 150 setup fee.',
+                ]
+            );
+            $this->line('  ✓ Payment: Smiling Hearts Care — $75');
+        }
+
+        if ($lucky) {
+            BillingRecord::updateOrCreate(
+                [
+                    'workspace_id' => $workspace->id,
+                    'customer_id' => $lucky->id,
+                    'title' => 'SME Digital Foundation First Payment',
+                ],
+                [
+                    'amount' => 100,
+                    'currency' => 'USD',
+                    'issue_date' => now()->addDay(),
+                    'status' => 'draft',
+                    'notes' => 'Proposed setup 250; collect 100 first payment, 50 for three months, then 10 retainer.',
+                ]
+            );
+            $this->line('  ✓ Billing record: Lucky — $100');
+        }
+
+        if ($malzCloset) {
+            BillingRecord::updateOrCreate(
+                [
+                    'workspace_id' => $workspace->id,
+                    'customer_id' => $malzCloset->id,
+                    'title' => 'Monthly Digital Support Retainer — Malz Closet',
+                ],
+                [
+                    'amount' => 150,
+                    'currency' => 'USD',
+                    'issue_date' => now()->startOfMonth(),
+                    'status' => 'issued',
+                    'notes' => 'Monthly retainer for digital support services.',
+                ]
+            );
+            $this->line('  ✓ Billing record: Malz Closet — $150');
+        }
+
+        if ($vorxPrints) {
+            BillingRecord::updateOrCreate(
+                [
+                    'workspace_id' => $workspace->id,
+                    'customer_id' => $vorxPrints->id,
+                    'title' => 'Creative and Website Support Retainer — Vorx Prints',
+                ],
+                [
+                    'amount' => 50,
+                    'currency' => 'USD',
+                    'issue_date' => now()->startOfMonth(),
+                    'status' => 'issued',
+                    'notes' => 'Monthly retainer for creative and website support.',
+                ]
+            );
+            $this->line('  ✓ Billing record: Vorx Prints — $50');
         }
     }
 

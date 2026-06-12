@@ -70,4 +70,14 @@ class Customer extends Model
     {
         return $this->hasMany(CustomerContact::class);
     }
+
+    public function billingRecords(): HasMany
+    {
+        return $this->hasMany(BillingRecord::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

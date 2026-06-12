@@ -92,6 +92,28 @@
             </div>
         </div>
 
+        <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+            <h3 class="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Finance Summary</h3>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Recurring Revenue</p>
+                    <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">${{ number_format($this->getMonthlyRecurringRevenue(), 2) }}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Outstanding Balance</p>
+                    <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">${{ number_format($this->getOutstandingBalance(), 2) }}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Payments This Month</p>
+                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${{ number_format($this->getPaymentsThisMonth(), 2) }}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Overdue Records</p>
+                    <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ $this->getOverdueBillingRecordCount() }}</p>
+                </div>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div class="space-y-6">
                 <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">

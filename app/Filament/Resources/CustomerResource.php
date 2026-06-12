@@ -223,6 +223,8 @@ class CustomerResource extends Resource
             \App\Filament\Resources\CustomerResource\RelationManagers\RetainersRelationManager::class,
             \App\Filament\Resources\CustomerResource\RelationManagers\SupportRequestsRelationManager::class,
             \App\Filament\Resources\CustomerResource\RelationManagers\ContactsRelationManager::class,
+            \App\Filament\Resources\CustomerResource\RelationManagers\BillingRecordsRelationManager::class,
+            \App\Filament\Resources\CustomerResource\RelationManagers\PaymentsRelationManager::class,
         ];
     }
 

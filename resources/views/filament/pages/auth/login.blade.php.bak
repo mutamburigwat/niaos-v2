@@ -136,7 +136,9 @@
             <div class="login-heading">{{ $this->getHeading() }}</div>
             <div class="login-subheading">{{ $this->getSubheading() }}</div>
 
-            {{ $this->content }}
+            <x-filament-panels::page.simple :heading="null" :subheading="null">
+                {{ $this->content }}
+            </x-filament-panels::page.simple>
         </div>
     </div>
 </div>

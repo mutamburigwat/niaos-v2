@@ -6,22 +6,21 @@ use App\Traits\BelongsToWorkspace;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Retainer extends Model
+class BillingRecord extends Model
 {
     use HasUuids, BelongsToWorkspace;
 
     protected $fillable = [
         'workspace_id',
         'customer_id',
-        'service_id',
+        'retainer_id',
         'title',
+        'description',
         'amount',
         'currency',
-        'billing_cycle',
-        'start_date',
-        'next_billing_date',
+        'issue_date',
+        'due_date',
         'status',
         'notes',
     ];
@@ -30,8 +29,8 @@ class Retainer extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'start_date' => 'date',
-            'next_billing_date' => 'date',
+            'issue_date' => 'date',
+            'due_date' => 'date',
         ];
     }
 
@@ -40,13 +39,8 @@ class Retainer extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function service(): BelongsTo
+    public function retainer(): BelongsTo
     {
-        return $this->belongsTo(Service::class);
-    }
-
-    public function billingRecords(): HasMany
-    {
-        return $this->hasMany(BillingRecord::class);
+        return $this->belongsTo(Retainer::class);
     }
 }
