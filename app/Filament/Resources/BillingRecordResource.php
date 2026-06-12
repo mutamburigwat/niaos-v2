@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BillingRecordResource\Pages;
 use App\Models\BillingRecord;
 use App\Models\Customer;
+use App\Models\Payment;
 use App\Services\WorkspaceContext;
 use Filament\Actions;
 use Filament\Forms;
@@ -66,7 +67,8 @@ class BillingRecordResource extends Resource
                                 'overdue' => 'Overdue',
                                 'cancelled' => 'Cancelled',
                             ])
-                            ->default('draft'),
+                            ->default('draft')
+                            ->helperText('Marking as "paid" will automatically record a payment if none exists.'),
                         Forms\Components\Textarea::make('description')
                             ->rows(2)
                             ->columnSpanFull()
@@ -125,6 +127,26 @@ class BillingRecordResource extends Resource
                     ]),
             ])
             ->actions([
+                Actions\Action::make('record_payment')
+                    ->label('Record Payment')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn (BillingRecord $record): bool => in_array($record->status, ['issued', 'partially_paid', 'overdue']))
+                    ->action(function (BillingRecord $record) {
+                        $exists = Payment::where('billing_record_id', $record->id)->exists();
+                        if ($exists) {
+                            return;
+                        }
+                        Payment::create([
+                            'workspace_id' => $record->workspace_id,
+                            'customer_id' => $record->customer_id,
+                            'billing_record_id' => $record->id,
+                            'amount' => $record->amount,
+                            'currency' => $record->currency ?? 'USD',
+                            'payment_date' => now(),
+                            'reference' => 'Manual payment for: ' . $record->title,
+                        ]);
+                    }),
                 Actions\EditAction::make(),
                 Actions\ActionGroup::make([
                     Actions\DeleteAction::make(),

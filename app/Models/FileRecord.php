@@ -15,23 +15,75 @@ class FileRecord extends Model
 
     protected $fillable = [
         'workspace_id',
-        'related_entity_type',
-        'related_entity_id',
-        'file_name',
-        'file_url',
-        'file_type',
-        'file_size',
         'uploaded_by',
+        'customer_id',
+        'support_request_id',
+        'quotation_id',
+        'name',
+        'original_filename',
+        'disk',
+        'path',
+        'mime_type',
+        'extension',
+        'size_bytes',
+        'url',
+        'notes',
+        'metadata',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'metadata' => 'array',
+            'size_bytes' => 'integer',
+        ];
+    }
 
     public function workspace(): BelongsTo
     {
         return $this->belongsTo(Workspace::class);
     }
 
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function supportRequest(): BelongsTo
+    {
+        return $this->belongsTo(SupportRequest::class);
+    }
+
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class);
+    }
+
     public function scopeForEntity($query, string $type, string $id)
     {
         return $query->where('related_entity_type', $type)
             ->where('related_entity_id', $id);
+    }
+
+    public function isImage(): bool
+    {
+        return in_array($this->extension, ['png', 'jpg', 'jpeg', 'webp']);
+    }
+
+    public function formattedSize(): string
+    {
+        $bytes = $this->size_bytes ?? 0;
+
+        if ($bytes >= 1073741824) {
+            return round($bytes / 1073741824, 2) . ' GB';
+        }
+        if ($bytes >= 1048576) {
+            return round($bytes / 1048576, 1) . ' MB';
+        }
+        if ($bytes >= 1024) {
+            return round($bytes / 1024, 1) . ' KB';
+        }
+
+        return $bytes . ' B';
     }
 }

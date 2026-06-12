@@ -80,4 +80,9 @@ class Customer extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(FileRecord::class, 'customer_id');
+    }
 }

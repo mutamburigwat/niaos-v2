@@ -229,7 +229,7 @@ class SeedAdpWorkspace extends Command
         $this->line('  Tasks seeded: 5');
         $this->line('  Support requests seeded: 3');
         $this->line('  Billing records seeded: 3');
-        $this->line('  Payments seeded: 1');
+        $this->line('  Payments seeded: 2');
         $this->line('  Contacts seeded: 11');
         $this->newLine();
 
@@ -563,7 +563,7 @@ class SeedAdpWorkspace extends Command
         $lucky = $customers['Lucky'] ?? null;
 
         if ($smilingHearts) {
-            BillingRecord::updateOrCreate(
+            $bill = BillingRecord::updateOrCreate(
                 [
                     'workspace_id' => $workspace->id,
                     'customer_id' => $smilingHearts->id,
@@ -583,6 +583,7 @@ class SeedAdpWorkspace extends Command
                 [
                     'workspace_id' => $workspace->id,
                     'customer_id' => $smilingHearts->id,
+                    'billing_record_id' => $bill->id,
                     'reference' => 'Initial setup payment',
                 ],
                 [
@@ -615,7 +616,7 @@ class SeedAdpWorkspace extends Command
         }
 
         if ($malzCloset) {
-            BillingRecord::updateOrCreate(
+            $bill = BillingRecord::updateOrCreate(
                 [
                     'workspace_id' => $workspace->id,
                     'customer_id' => $malzCloset->id,
@@ -633,7 +634,7 @@ class SeedAdpWorkspace extends Command
         }
 
         if ($vorxPrints) {
-            BillingRecord::updateOrCreate(
+            $bill = BillingRecord::updateOrCreate(
                 [
                     'workspace_id' => $workspace->id,
                     'customer_id' => $vorxPrints->id,
@@ -643,11 +644,27 @@ class SeedAdpWorkspace extends Command
                     'amount' => 50,
                     'currency' => 'USD',
                     'issue_date' => now()->startOfMonth(),
-                    'status' => 'issued',
+                    'status' => 'paid',
                     'notes' => 'Monthly retainer for creative and website support.',
                 ]
             );
-            $this->line('  ✓ Billing record: Vorx Prints — $50');
+            $this->line('  ✓ Billing record: Vorx Prints — $50 (paid)');
+
+            Payment::updateOrCreate(
+                [
+                    'workspace_id' => $workspace->id,
+                    'customer_id' => $vorxPrints->id,
+                    'billing_record_id' => $bill->id,
+                    'reference' => 'Auto-created from paid billing record',
+                ],
+                [
+                    'amount' => 50,
+                    'currency' => 'USD',
+                    'payment_date' => now()->startOfMonth(),
+                    'notes' => 'Monthly retainer for creative and website support.',
+                ]
+            );
+            $this->line('  ✓ Payment: Vorx Prints — $50');
         }
     }
 

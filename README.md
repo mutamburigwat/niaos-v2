@@ -23,7 +23,7 @@ php artisan key:generate
 
 # Configure .env — set DB_* to your PostgreSQL credentials
 # Set GROQ_API_KEY for AI features
-# Set R2_* for Cloudflare R2 file storage
+# Set R2_* for Cloudflare R2 file storage (see Cloudflare R2 below)
 
 # Database
 php artisan migrate
@@ -101,6 +101,49 @@ Storage driver auto-selects based on `FILESYSTEM_DISK` env:
 - **Never** run `php artisan test` against the main (`niaos`) database — use `.env.testing` (database `niaos_test`) instead.
 - **Never** overwrite `.env` — copy `.env.example` to `.env` only during initial setup.
 - **Always** run `php artisan filament:assets` after Composer install/update, dependency changes, or when Filament CSS/assets go missing.
+
+## Cloudflare R2 File Storage
+
+Files are stored on Cloudflare R2 using an S3-compatible disk.
+
+### Required environment variables
+
+```bash
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=niaos-files
+R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+R2_URL=https://pub-<bucket-id>.r2.dev
+R2_REGION=auto
+```
+
+- `R2_ENDPOINT` — the S3 API endpoint for your R2 bucket
+- `R2_URL` — the public R2.dev domain for generating file URLs
+
+### Storage disk
+
+- **Name:** `r2`
+- **Driver:** `s3` (via `league/flysystem-aws-s3-v3`)
+- Files are stored under `workspaces/{workspace_id}/files/{YYYY}/{MM}/`
+
+### Upload test
+
+```bash
+php artisan tinker
+# Or via /app/file-records/create in the browser
+```
+
+### Scope
+
+- File records are scoped to the active workspace via `BelongsToWorkspace` trait
+- Users only see files from their own workspace
+- The `customer_id` FK allows linking files to customers (visible under Customers > Files tab)
+
+### Security
+
+- Uploaded files are **private** by default
+- Do **not** commit R2 credentials
+- Keep `R2_URL` out of public repositories
 
 ### Safe deploy
 

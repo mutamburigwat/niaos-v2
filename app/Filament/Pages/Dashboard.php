@@ -116,6 +116,10 @@ class Dashboard extends Page
 
     public function getOutstandingBalance(): float
     {
+        // Current assumption: BillingRecord.amount represents the outstanding
+        // balance for unpaid/partially-paid/overdue records.
+        // If amount later represents full invoice value, this should be
+        // calculated as (sum of amounts) minus (sum of linked payments).
         return (float) BillingRecord::query()->currentWorkspace()
             ->whereIn('status', ['issued', 'partially_paid', 'overdue'])
             ->sum('amount');

@@ -3,16 +3,20 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FileRecordResource\Pages;
+use App\Models\Customer;
 use App\Models\FileRecord;
+use App\Services\WorkspaceContext;
 use Filament\Forms;
 use Filament\Actions;
+use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Resource;
-use Filament\Schemas;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class FileRecordResource extends Resource
 {
@@ -23,34 +27,47 @@ class FileRecordResource extends Resource
     {
         return $schema
             ->schema([
-                Schemas\Components\Section::make('File Information')
+                Section::make('Upload File')
                     ->schema([
-                        Forms\Components\TextInput::make('file_name')
+                        FileUpload::make('file')
+                            ->label('File')
+                            ->disk('r2')
+                            ->directory(fn () => 'workspaces/' . WorkspaceContext::activeWorkspaceId() . '/files/' . now()->format('Y/m'))
+                            ->visibility('private')
+                            ->preserveFilenames(false)
+                            ->storeFileNamesIn('original_filename')
+                            ->acceptedFileTypes([
+                                'application/pdf',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                'application/vnd.ms-excel',
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'image/png',
+                                'image/jpeg',
+                                'image/webp',
+                            ])
+                            ->maxSize(10240)
+                            ->required()
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                if ($state) {
+                                    $set('disk', 'r2');
+                                    $set('mime_type', $state->getMimeType());
+                                    $set('extension', $state->getExtension());
+                                    $set('size_bytes', $state->getSize());
+                                }
+                            }),
+                        Forms\Components\TextInput::make('name')
+                            ->label('Display name')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('file_url')
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('file_type')
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('file_size')
-                            ->numeric()
-                            ->required()
-                            ->suffix('bytes'),
-                    ])
-                    ->columns(2),
-                Schemas\Components\Section::make('Linked Entity')
-                    ->schema([
-                        Forms\Components\Select::make('related_entity_type')
-                            ->options([
-                                'customer' => 'Customer',
-                                'lead' => 'Lead',
-                                'task' => 'Task',
-                                'quotation' => 'Quotation',
-                            ]),
-                        Forms\Components\TextInput::make('related_entity_id')
-                            ->maxLength(255),
+                        Forms\Components\Select::make('customer_id')
+                            ->label('Customer (optional)')
+                            ->options(fn () => Customer::query()->currentWorkspace()->orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->nullable(),
+                        Forms\Components\Textarea::make('notes')
+                            ->rows(2)
+                            ->nullable(),
                     ])
                     ->columns(2),
             ]);
@@ -60,21 +77,31 @@ class FileRecordResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('file_name')
+                Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('file_type')
+                Tables\Columns\TextColumn::make('original_filename')
+                    ->label('Original file')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('extension')
+                    ->label('Type')
                     ->badge(),
-                Tables\Columns\TextColumn::make('file_size')
-                    ->formatStateUsing(fn (int $state): string => $state > 1048576
-                        ? round($state / 1048576, 1) . ' MB'
-                        : round($state / 1024, 1) . ' KB')
+                Tables\Columns\TextColumn::make('size_bytes')
+                    ->label('Size')
+                    ->formatStateUsing(fn (?int $state): string => $state
+                        ? ($state > 1048576
+                            ? round($state / 1048576, 1) . ' MB'
+                            : round($state / 1024, 1) . ' KB')
+                        : '-')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('related_entity_type')
-                    ->label('Linked To')
-                    ->badge(),
+                Tables\Columns\TextColumn::make('customer.name')
+                    ->label('Customer')
+                    ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('uploaded_by')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -83,16 +110,33 @@ class FileRecordResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->modifyQueryUsing(fn (Builder $query) => $query->currentWorkspace())
             ->filters([
-                Tables\Filters\SelectFilter::make('related_entity_type')
+                Tables\Filters\SelectFilter::make('extension')
+                    ->label('File type')
                     ->options([
-                        'customer' => 'Customer',
-                        'lead' => 'Lead',
-                        'task' => 'Task',
-                        'quotation' => 'Quotation',
+                        'pdf' => 'PDF',
+                        'doc' => 'DOC',
+                        'docx' => 'DOCX',
+                        'xls' => 'XLS',
+                        'xlsx' => 'XLSX',
+                        'png' => 'PNG',
+                        'jpg' => 'JPG',
+                        'jpeg' => 'JPEG',
+                        'webp' => 'WebP',
                     ]),
-                Tables\Filters\SelectFilter::make('file_type'),
             ])
             ->actions([
+                Actions\Action::make('download')
+                    ->label('Download')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function (FileRecord $record) {
+                        return Storage::disk($record->disk ?? 'r2')->download($record->path, $record->original_filename);
+                    }),
+                Actions\Action::make('preview')
+                    ->label('Open')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (FileRecord $record) => Storage::disk($record->disk ?? 'r2')->url($record->path))
+                    ->openUrlInNewTab()
+                    ->visible(fn (FileRecord $record) => $record->isImage()),
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
@@ -101,6 +145,11 @@ class FileRecordResource extends Resource
                     Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
     }
 
     public static function getPages(): array
