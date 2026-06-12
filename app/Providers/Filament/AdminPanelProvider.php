@@ -24,7 +24,6 @@ use App\Filament\Resources\TaskResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Illuminate\Support\HtmlString;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
@@ -54,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->font('Manrope')
             ->brandName('NiaOS')
-            ->brandLogo(new HtmlString(view('components.niaos-brand-logo')->render()))
+            ->brandLogo(asset('dark_wordmark.png'))
             ->brandLogoHeight('2rem')
             ->favicon(asset('icon.png'))
             ->viteTheme('resources/css/app.css')

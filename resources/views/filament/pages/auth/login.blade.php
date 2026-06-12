@@ -1,24 +1,21 @@
-<div class="min-h-screen bg-cover bg-center bg-no-repeat relative" style="background-image: url('{{ asset('login.png') }}')">
-    <div class="absolute inset-0 bg-black/55"></div>
-    <div class="relative z-10 flex min-h-screen items-center justify-center p-6">
-        <div class="w-full max-w-[460px] bg-[rgba(20,20,24,0.55)] backdrop-blur-lg border border-[#C9A84C]/20 rounded-2xl p-10 shadow-2xl">
-            @if ($this->hasLogo())
-                <div class="text-center mb-6">
-                    <x-filament-panels::logo />
-                </div>
-            @endif
+<div class="fi-simple-page">
+    <div class="fi-simple-page-content">
+        <header class="fi-simple-header">
+            <div class="flex justify-center mb-6">
+                <img
+                    src="{{ asset('dark_wordmark.png') }}"
+                    alt="NiaOS"
+                    style="height: 2rem; width: auto; object-fit: contain;"
+                />
+            </div>
 
-            <h2 class="text-center text-xl font-semibold text-[#C9A84C] mb-1">
-                {{ $this->getHeading() }}
-            </h2>
+            <h1 class="fi-simple-header-heading">{{ $this->getHeading() }}</h1>
 
             @if (filled($this->getSubheading()))
-                <p class="text-center text-sm text-white/60 mb-6">
-                    {{ $this->getSubheading() }}
-                </p>
+                <p class="fi-simple-header-subheading">{{ $this->getSubheading() }}</p>
             @endif
+        </header>
 
-            {{ $this->content }}
-        </div>
+        {{ $this->content }}
     </div>
 </div>

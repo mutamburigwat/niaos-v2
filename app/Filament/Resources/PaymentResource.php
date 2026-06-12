@@ -6,6 +6,7 @@ use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Services\WorkspaceContext;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -91,14 +92,14 @@ class PaymentResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->currentWorkspace())
             ->filters([])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\DeleteAction::make(),
+                Actions\EditAction::make(),
+                Actions\ActionGroup::make([
+                    Actions\DeleteAction::make(),
                 ]),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
